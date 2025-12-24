@@ -50,8 +50,7 @@ const SkillCatalog = () => {
 
     return (
         <div className="flex w-full flex-col gap-2">
-            <div className="flex items-center justify-between text-xs font-medium uppercase text-primary">
-                <span>Skills</span>
+            <div className="flex items-center justify-end">
                 <button
                     type="button"
                     onClick={handleReload}

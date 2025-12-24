@@ -17,6 +17,7 @@ import { truncateText } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import SkillCatalog from './SkillCatalog'
 import MemorySettings from './MemorySettings'
+import { SidebarSection } from './SidebarSection'
 
 const ENDPOINT_PLACEHOLDER = 'NO ENDPOINT ADDED'
 const SidebarHeader = () => (
@@ -276,39 +277,39 @@ const Sidebar = ({
             <AuthToken hasEnvToken={hasEnvToken} envToken={envToken} />
             {isEndpointActive && (
               <>
-                <motion.div
-                  className="flex w-full flex-col items-start gap-2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
-                >
-                  <div className="text-xs font-medium uppercase text-primary">
-                    Mode
+                <SidebarSection title="Configuration" defaultOpen={false}>
+                  <div className="flex w-full flex-col items-start gap-2">
+                    {isEndpointLoading ? (
+                      <div className="flex w-full flex-col gap-2">
+                        {Array.from({ length: 3 }).map((_, index) => (
+                          <Skeleton
+                            key={index}
+                            className="h-9 w-full rounded-xl"
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <>
+                        <ModeSelector />
+                        <EntitySelector />
+                        {selectedModel && (agentId || teamId) && (
+                          <ModelDisplay model={selectedModel} />
+                        )}
+                      </>
+                    )}
                   </div>
-                  {isEndpointLoading ? (
-                    <div className="flex w-full flex-col gap-2">
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <Skeleton
-                          key={index}
-                          className="h-9 w-full rounded-xl"
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <>
-                      <ModeSelector />
-                      <EntitySelector />
-                      {selectedModel && (agentId || teamId) && (
-                        <ModelDisplay model={selectedModel} />
-                      )}
-                    </>
-                  )}
-                </motion.div>
-                <SkillCatalog />
+                </SidebarSection>
+                <SidebarSection title="Skills" defaultOpen={false}>
+                  <SkillCatalog />
+                </SidebarSection>
                 {process.env.NEXT_PUBLIC_ENABLE_MEMORY === 'true' && (
-                  <MemorySettings />
+                  <SidebarSection title="Memory" defaultOpen={false}>
+                    <MemorySettings />
+                  </SidebarSection>
                 )}
-                <Sessions />
+                <SidebarSection title="Sessions" defaultOpen={false}>
+                  <Sessions />
+                </SidebarSection>
               </>
             )}
           </>
