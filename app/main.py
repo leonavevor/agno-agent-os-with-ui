@@ -8,6 +8,7 @@ from agents.agno_assist import agno_assist
 from agents.web_agent import web_agent
 from app.api.health import router as health_router
 from app.api.memory import router as memory_router
+from app.api.models import router as models_router
 from app.api.references import router as references_router
 from app.api.skills import router as skills_router
 from app.api.knowledge import router as knowledge_router
@@ -34,6 +35,7 @@ app.state.agent_os = agent_os
 
 # Include custom API routers for advanced features
 app.include_router(health_router)
+app.include_router(models_router)
 app.include_router(skills_router)
 app.include_router(memory_router)
 app.include_router(references_router)

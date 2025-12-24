@@ -201,7 +201,7 @@ export default function KnowledgeUpload() {
                     <button
                         type="button"
                         onClick={() => setShowClearAllDialog(true)}
-                        className="text-[10px] font-medium uppercase text-destructive hover:text-destructive/80"
+                        className="text-[10px] font-medium uppercase text-rose-400/90 hover:text-rose-400/70"
                     >
                         Clear All
                     </button>
@@ -215,9 +215,9 @@ export default function KnowledgeUpload() {
                         <div className="text-[10px] text-muted/70 uppercase">Total</div>
                         <div className="text-lg font-bold text-primary">{knowledgeList.length}</div>
                     </div>
-                    <div className="rounded-lg border border-positive/10 bg-positive/5 p-2">
+                    <div className="rounded-lg border border-emerald-500/10 bg-emerald-500/5 p-2">
                         <div className="text-[10px] text-muted/70 uppercase">Completed</div>
-                        <div className="text-lg font-bold text-positive">{getStatusCount('completed')}</div>
+                        <div className="text-lg font-bold text-emerald-400/80">{getStatusCount('completed')}</div>
                     </div>
                 </div>
             )}
@@ -238,8 +238,8 @@ export default function KnowledgeUpload() {
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
                                 className={`rounded px-2 py-1 text-[9px] font-medium uppercase transition-colors ${statusFilter === status
-                                        ? 'bg-primary text-background'
-                                        : 'bg-accent/50 text-muted/70 hover:bg-accent'
+                                    ? 'bg-primary text-background'
+                                    : 'bg-accent/50 text-muted/70 hover:bg-accent'
                                     }`}
                             >
                                 {status}
@@ -325,7 +325,7 @@ export default function KnowledgeUpload() {
                                             </p>
                                         )}
                                         {item.status === 'failed' && item.status_message && (
-                                            <p className="mt-1 text-[10px] text-destructive line-clamp-1">
+                                            <p className="mt-1 text-[10px] text-rose-400/80 line-clamp-1">
                                                 {item.status_message}
                                             </p>
                                         )}
@@ -338,7 +338,7 @@ export default function KnowledgeUpload() {
                                         className="shrink-0 p-1 hover:bg-destructive/10 rounded"
                                         title="Delete"
                                     >
-                                        <Icon type="trash" size="xs" className="text-destructive" />
+                                        <Icon type="trash" size="xs" className="text-rose-400/80" />
                                     </button>
                                 </div>
                             </div>
@@ -451,8 +451,8 @@ export default function KnowledgeUpload() {
 
                                     {selectedItem.status === 'failed' && selectedItem.status_message && (
                                         <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
-                                            <div className="text-[10px] text-destructive/70 uppercase font-medium mb-1">Error Message</div>
-                                            <div className="text-xs text-destructive">{selectedItem.status_message}</div>
+                                            <div className="text-[10px] text-rose-400/70 uppercase font-medium mb-1">Error Message</div>
+                                            <div className="text-xs text-rose-400/90">{selectedItem.status_message}</div>
                                         </div>
                                     )}
 

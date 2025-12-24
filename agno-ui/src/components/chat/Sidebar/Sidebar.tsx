@@ -19,6 +19,10 @@ import SkillCatalog from './SkillCatalog'
 import MemorySettings from './MemorySettings'
 import KnowledgeUpload from './KnowledgeUpload'
 import { SidebarSection } from './SidebarSection'
+import { SystemHealthIndicator } from '@/components/SystemHealthIndicator'
+import { ModelSelector } from '@/components/ModelSelector'
+import { SkillsModal } from '@/components/SkillsModal'
+import { ProjectModal } from '@/components/ProjectModal'
 
 const ENDPOINT_PLACEHOLDER = 'NO ENDPOINT ADDED'
 const SidebarHeader = () => (
@@ -80,7 +84,7 @@ const Endpoint = () => {
   }, [selectedEndpoint])
 
   const getStatusColor = (isActive: boolean) =>
-    isActive ? 'bg-positive' : 'bg-destructive'
+    isActive ? 'bg-emerald-500/80' : 'bg-rose-500/80'
 
   const handleSave = async () => {
     if (!isValidUrl(endpointValue)) {
@@ -119,8 +123,8 @@ const Endpoint = () => {
   }
 
   return (
-    <div className="flex flex-col items-start gap-2">
-      <div className="text-xs font-medium uppercase text-primary">AgentOS</div>
+    <div className="flex w-full flex-col items-start gap-2">
+      <div className="text-[10px] font-medium uppercase text-muted-foreground">Endpoint</div>
       {isEditing ? (
         <div className="flex w-full items-center gap-1">
           <input
@@ -213,6 +217,8 @@ const Sidebar = ({
   envToken?: string
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [skillsModalOpen, setSkillsModalOpen] = useState(false)
+  const [projectModalOpen, setProjectModalOpen] = useState(false)
   const { clearChat, focusChatInput, initialize } = useChatActions()
   const {
     messages,
@@ -259,7 +265,7 @@ const Sidebar = ({
         />
       </motion.button>
       <motion.div
-        className="w-60 space-y-5"
+        className="w-60 flex flex-col h-full"
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: isCollapsed ? 0 : 1, x: isCollapsed ? -20 : 0 }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
@@ -267,58 +273,86 @@ const Sidebar = ({
           pointerEvents: isCollapsed ? 'none' : 'auto'
         }}
       >
-        <SidebarHeader />
-        <NewChatButton
-          disabled={messages.length === 0}
-          onClick={handleNewChat}
-        />
-        {isMounted && (
-          <>
-            <Endpoint />
-            <AuthToken hasEnvToken={hasEnvToken} envToken={envToken} />
-            {isEndpointActive && (
-              <>
-                <SidebarSection title="Configuration" defaultOpen={false}>
-                  <div className="flex w-full flex-col items-start gap-2">
-                    {isEndpointLoading ? (
-                      <div className="flex w-full flex-col gap-2">
-                        {Array.from({ length: 3 }).map((_, index) => (
-                          <Skeleton
-                            key={index}
-                            className="h-9 w-full rounded-xl"
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <>
-                        <ModeSelector />
-                        <EntitySelector />
-                        {selectedModel && (agentId || teamId) && (
-                          <ModelDisplay model={selectedModel} />
-                        )}
-                      </>
-                    )}
-                  </div>
-                </SidebarSection>
-                <SidebarSection title="Skills" defaultOpen={false}>
-                  <SkillCatalog />
-                </SidebarSection>
-                <SidebarSection title="Knowledge" defaultOpen={false}>
-                  <KnowledgeUpload />
-                </SidebarSection>
-                {process.env.NEXT_PUBLIC_ENABLE_MEMORY === 'true' && (
-                  <SidebarSection title="Memory" defaultOpen={false}>
-                    <MemorySettings />
+        <div className="space-y-5">
+          <SidebarHeader />
+          <div className="flex flex-col gap-2">
+            <NewChatButton
+              disabled={messages.length === 0}
+              onClick={handleNewChat}
+            />
+            <Button
+              variant="outline"
+              onClick={() => setProjectModalOpen(true)}
+              className="h-9 w-full rounded-xl border-primary/10 bg-accent/30 text-xs font-medium uppercase text-muted-foreground hover:bg-accent/50 hover:text-primary/90 transition-colors"
+            >
+              <Icon type="folder" size="xs" />
+              <span className="ml-2">New Project</span>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setSkillsModalOpen(true)}
+              className="h-9 w-full rounded-xl border-primary/10 bg-accent/30 text-xs font-medium uppercase text-muted-foreground hover:bg-accent/50 hover:text-primary/90 transition-colors"
+            >
+              <Icon type="tool" size="xs" />
+              <span className="ml-2">Skills</span>
+            </Button>
+          </div>
+          <div className="border-t border-primary/10" />
+          {isMounted && (
+            <>
+              <SidebarSection title="System" defaultOpen={true}>
+                <div className="flex w-full flex-col items-start gap-4">
+                  <Endpoint />
+                  <AuthToken hasEnvToken={hasEnvToken} envToken={envToken} />
+                </div>
+              </SidebarSection>
+              {isEndpointActive && (
+                <>
+                  <SidebarSection title="Configuration" defaultOpen={false}>
+                    <div className="flex w-full flex-col items-start gap-2">
+                      {isEndpointLoading ? (
+                        <div className="flex w-full flex-col gap-2">
+                          {Array.from({ length: 3 }).map((_, index) => (
+                            <Skeleton
+                              key={index}
+                              className="h-9 w-full rounded-xl"
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <>
+                          <ModeSelector />
+                          <EntitySelector />
+                          <ModelSelector />
+                          {selectedModel && (agentId || teamId) && (
+                            <ModelDisplay model={selectedModel} />
+                          )}
+                        </>
+                      )}
+                    </div>
                   </SidebarSection>
-                )}
-                <SidebarSection title="Sessions" defaultOpen={false}>
-                  <Sessions />
-                </SidebarSection>
-              </>
-            )}
-          </>
-        )}
+                  <SidebarSection title="Knowledge" defaultOpen={false}>
+                    <KnowledgeUpload />
+                  </SidebarSection>
+                  {process.env.NEXT_PUBLIC_ENABLE_MEMORY === 'true' && (
+                    <SidebarSection title="Memory" defaultOpen={false}>
+                      <MemorySettings />
+                    </SidebarSection>
+                  )}
+                  <SidebarSection title="Sessions" defaultOpen={false}>
+                    <Sessions />
+                  </SidebarSection>
+                </>
+              )}
+            </>
+          )}
+        </div>
+        <div className="mt-auto pt-4 border-t border-primary/10">
+          <SystemHealthIndicator />
+        </div>
       </motion.div>
+      <SkillsModal open={skillsModalOpen} onOpenChange={setSkillsModalOpen} />
+      <ProjectModal open={projectModalOpen} onOpenChange={setProjectModalOpen} />
     </motion.aside>
   )
 }

@@ -40,6 +40,72 @@ export interface SkillRouteResponse {
   skills: SkillMetadata[]
 }
 
+export interface ModelInfo {
+  id: string
+  name: string
+  provider: string
+  description?: string | null
+  context_window?: number | null
+  supports_streaming: boolean
+  supports_tools: boolean
+  supports_vision: boolean
+  is_reasoning: boolean
+}
+
+export interface ModelProvider {
+  id: string
+  name: string
+  models: ModelInfo[]
+}
+
+export interface CurrentModelResponse {
+  model_id: string
+  provider: string
+  model_info?: ModelInfo | null
+}
+
+export interface ProviderConfig {
+  provider_id: string
+  api_key?: string | null
+  base_url?: string | null
+  enabled: boolean
+}
+
+export interface ProviderConfigUpdate {
+  api_key?: string | null
+  base_url?: string | null
+  enabled?: boolean | null
+}
+
+export interface ModelSettings {
+  temperature?: number | null
+  max_tokens?: number | null
+  top_p?: number | null
+  frequency_penalty?: number | null
+  presence_penalty?: number | null
+  stream?: boolean
+  timeout?: number | null
+}
+
+export interface ModelConfiguration {
+  model_id: string
+  provider: string
+  settings: ModelSettings
+  enabled: boolean
+}
+
+export interface EntityModelConfig {
+  entity_type: 'project' | 'team' | 'agent'
+  entity_id: string
+  configuration?: ModelConfiguration | null
+  inherit_from?: string | null
+}
+
+export interface DefaultModelConfig {
+  configuration: ModelConfiguration
+  description?: string | null
+}
+
 export type ToolCallProps = {
   tools: ToolCall
 }

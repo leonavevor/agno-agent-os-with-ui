@@ -39,7 +39,15 @@ import {
   Database,
   Loader2,
   Info,
-  Upload
+  Upload,
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
+  Search,
+  Folder,
+  Wrench,
+  Sun,
+  Moon
 } from 'lucide-react'
 
 import { PlusIcon } from '@radix-ui/react-icons'
@@ -83,5 +91,13 @@ export const ICONS: IconTypeMap = {
   database: Database,
   loader: Loader2,
   info: Info,
-  upload: Upload
+  upload: Upload,
+  'check-circle': CheckCircle,
+  'alert-triangle': AlertTriangle,
+  'x-circle': XCircle,
+  search: Search,
+  folder: Folder,
+  tool: Wrench,
+  sun: Sun,
+  moon: Moon
 }

@@ -6,10 +6,28 @@
   :root {
     --color-border-default: 255, 255, 255, 0.2;
     --scrollbar-width: 0.1rem;
+    --background: #111113;
+    --background-secondary: #27272A;
+    --accent: #27272A;
+    --foreground: #FAFAFA;
+    --muted: #A1A1AA;
+    --primary: #FAFAFA;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   body {
-    @apply bg-background/80 text-secondary;
+    background-color: var(--background);
+    color: var(--foreground);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Light theme overrides */
+  .theme-light {
+    --color-border-default: 0, 0, 0, 0.1;
+  }
+
+  .theme-light body {
+    color: #111113;
   }
 }
 

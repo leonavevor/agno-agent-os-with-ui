@@ -36,6 +36,18 @@ export type IconType =
   | 'plus-icon'
   | 'references'
   | 'trash'
+  | 'database'
+  | 'loader'
+  | 'info'
+  | 'upload'
+  | 'check-circle'
+  | 'alert-triangle'
+  | 'x-circle'
+  | 'search'
+  | 'folder'
+  | 'tool'
+  | 'sun'
+  | 'moon'
 
 export interface IconProps {
   type: IconType

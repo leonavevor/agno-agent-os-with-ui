@@ -44,9 +44,9 @@ interface ActionButtonProps {
 
 const ActionButton = ({ href, variant, text }: ActionButtonProps) => {
   const baseStyles =
-    'px-4 py-2 text-sm transition-colors font-dmmono tracking-tight'
+    'px-4 py-2 text-sm transition-colors font-dmmono tracking-tight text-neutral-100'
   const variantStyles = {
-    primary: 'border border-border hover:bg-neutral-800 rounded-xl'
+    primary: 'border border-border hover:bg-accent rounded-xl'
   }
 
   return (
@@ -114,7 +114,7 @@ const ChatBlankState = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="text-3xl font-[600] tracking-tight"
+          className="text-3xl font-[600] tracking-tight text-neutral-100"
         >
           <div className="flex items-center justify-center gap-x-2 whitespace-nowrap font-medium">
             <span className="flex items-center font-[600]">
@@ -157,7 +157,7 @@ const ChatBlankState = () => {
                         <Icon type={icon.type} size="default" />
                       </div>
                       <motion.div
-                        className="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 transform whitespace-nowrap rounded bg-neutral-800 px-2 py-1 text-xs text-primary"
+                        className="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 transform whitespace-nowrap rounded bg-accent px-2 py-1 text-xs text-neutral-100"
                         variants={tooltipVariants}
                         initial="hidden"
                         animate={

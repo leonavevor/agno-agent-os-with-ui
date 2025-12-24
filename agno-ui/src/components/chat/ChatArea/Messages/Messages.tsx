@@ -126,7 +126,7 @@ const AgentMessageWrapper = ({ message }: MessageWrapperProps) => {
   )
 }
 const Reasoning: FC<ReasoningStepProps> = ({ index, stepTitle }) => (
-  <div className="flex items-center gap-2 text-secondary">
+  <div className="flex items-center gap-2 text-neutral-100">
     <div className="flex h-[20px] items-center rounded-md bg-background-secondary p-2">
       <p className="text-xs">STEP {index + 1}</p>
     </div>

@@ -17,7 +17,7 @@ const AgentMessage = ({ message }: MessageProps) => {
   let messageContent
   if (message.streamingError) {
     messageContent = (
-      <p className="text-destructive">
+      <p className="text-rose-400/90">
         Oops! Something went wrong while streaming.{' '}
         {streamingErrorMessage ? (
           <>{streamingErrorMessage}</>

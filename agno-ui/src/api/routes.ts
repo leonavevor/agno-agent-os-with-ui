@@ -19,6 +19,7 @@ export const APIRoutes = {
   GetSkills: (agentOSUrl: string) => `${agentOSUrl}/skills`,
   RouteSkills: (agentOSUrl: string) => `${agentOSUrl}/skills/route`,
   ReloadSkills: (agentOSUrl: string) => `${agentOSUrl}/skills/reload`,
+  CreateSkill: (agentOSUrl: string) => `${agentOSUrl}/skills/create`,
 
   // Memory routes
   InitializeSession: (agentOSUrl: string) => `${agentOSUrl}/memory/sessions`,

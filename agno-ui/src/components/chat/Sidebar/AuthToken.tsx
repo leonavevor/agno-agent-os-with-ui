@@ -60,10 +60,8 @@ const AuthToken = ({
     : 'NO TOKEN SET'
 
   return (
-    <div className="flex flex-col items-start gap-2">
-      <div className="text-xs font-medium uppercase text-primary">
-        Auth Token
-      </div>
+    <div className="flex w-full flex-col items-start gap-2">
+      <div className="text-[10px] font-medium uppercase text-muted-foreground">Token</div>
       {isEditing ? (
         <div className="flex w-full items-center gap-1">
           <input

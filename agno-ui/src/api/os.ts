@@ -239,6 +239,49 @@ export const reloadSkillsAPI = async (
   }
 }
 
+export interface CreateSkillPayload {
+  name: string
+  description: string
+  tags: string[]
+  match_terms: string[]
+  instructions: string
+  version?: string
+}
+
+export interface CreateSkillResponse {
+  status: string
+  skill: SkillMetadata
+  message: string
+}
+
+export const createSkillAPI = async (
+  endpoint: string,
+  payload: CreateSkillPayload,
+  authToken?: string
+): Promise<CreateSkillResponse | null> => {
+  try {
+    const response = await fetch(APIRoutes.CreateSkill(endpoint), {
+      method: 'POST',
+      headers: createHeaders(authToken),
+      body: JSON.stringify(payload)
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const errorMessage = errorData.detail || response.statusText
+      toast.error(`Failed to create skill: ${errorMessage}`)
+      return null
+    }
+
+    const data = (await response.json()) as CreateSkillResponse
+    toast.success(data.message || 'Skill created successfully')
+    return data
+  } catch (error) {
+    toast.error('Error creating skill')
+    return null
+  }
+}
+
 export const deleteTeamSessionAPI = async (
   base: string,
   teamId: string,

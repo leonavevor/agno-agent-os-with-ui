@@ -11,17 +11,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#FAFAFA',
+        primary: 'var(--primary, #FAFAFA)',
         primaryAccent: '#18181B',
         brand: '#FF4017',
         background: {
-          DEFAULT: '#111113',
-          secondary: '#27272A'
+          DEFAULT: 'var(--background, #111113)',
+          secondary: 'var(--background-secondary, #27272A)'
         },
         secondary: '#f5f5f5',
         border: 'rgba(var(--color-border-default))',
-        accent: '#27272A',
-        muted: '#A1A1AA',
+        accent: 'var(--accent, #27272A)',
+        muted: 'var(--muted, #A1A1AA)',
+        foreground: 'var(--foreground, #FAFAFA)',
         destructive: '#E53935',
         positive: '#22C55E'
       },

@@ -225,8 +225,8 @@ export default function MemorySettings() {
                             <button
                                 onClick={() => setActiveTab('sessions')}
                                 className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors border-b-2 ${activeTab === 'sessions'
-                                        ? 'border-primary text-primary'
-                                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted-foreground hover:text-foreground'
                                     }`}
                             >
                                 <Icon type="database" size="xs" />
@@ -235,8 +235,8 @@ export default function MemorySettings() {
                             <button
                                 onClick={() => setActiveTab('search')}
                                 className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors border-b-2 ${activeTab === 'search'
-                                        ? 'border-primary text-primary'
-                                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted-foreground hover:text-foreground'
                                     }`}
                             >
                                 <Icon type="search" size="xs" />
@@ -320,7 +320,7 @@ export default function MemorySettings() {
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 onClick={() => setDeleteSessionId(session.session_id)}
-                                                                className="text-destructive hover:bg-destructive/10"
+                                                                className="text-rose-400/90 hover:bg-rose-500/10"
                                                             >
                                                                 <Icon type="trash" size="xs" />
                                                             </Button>

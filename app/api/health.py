@@ -17,7 +17,9 @@ class HealthStatus(BaseModel):
     uptime: float
 
 
-@router.get("/health", response_model=HealthStatus, status_code=status.HTTP_200_OK)
+@router.get(
+    "/system/health", response_model=HealthStatus, status_code=status.HTTP_200_OK
+)
 async def health_check() -> HealthStatus:
     """
     Comprehensive health check endpoint.
@@ -30,16 +32,25 @@ async def health_check() -> HealthStatus:
 
     start_time = time.time()
 
-    # Check database connectivity
-    db_status = {"connected": False, "error": None}
+    # Check database connectivity with more details
+    db_status = {
+        "connected": False,
+        "error": None,
+        "latency_ms": None,
+        "pool_size": None,
+    }
     try:
         from core.memory_manager import MemoryManager
+        from sqlalchemy import text
 
         memory = MemoryManager()
+        db_start = time.time()
         # Try a simple query
         with memory.SessionLocal() as session:
-            session.execute("SELECT 1")
+            session.execute(text("SELECT 1"))
         db_status["connected"] = True
+        db_status["latency_ms"] = round((time.time() - db_start) * 1000, 2)
+        db_status["pool_size"] = memory.engine.pool.size()
     except Exception as e:
         db_status["error"] = str(e)
 
@@ -71,20 +82,23 @@ async def readiness_check() -> Dict[str, Any]:
     """
     try:
         from core.memory_manager import MemoryManager
+        from sqlalchemy import text
 
         memory = MemoryManager()
         with memory.SessionLocal() as session:
-            session.execute("SELECT 1")
+            session.execute(text("SELECT 1"))
         return {"ready": True}
     except Exception as e:
         return {"ready": False, "error": str(e)}
 
 
 @router.get("/liveness", status_code=status.HTTP_200_OK)
-async def liveness_check() -> Dict[str, str]:
+async def liveness_check() -> Dict[str, Any]:
     """
     Liveness probe for Kubernetes/container orchestration.
 
     Returns 200 if service is alive (doesn't check dependencies).
     """
+    import time
+
     return {"alive": True, "timestamp": str(time.time())}
