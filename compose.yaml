@@ -1,0 +1,84 @@
+services:
+  pgvector:
+    image: agnohq/pgvector:16
+    restart: unless-stopped
+    ports:
+      - "5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USER:-ai}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ai}
+      POSTGRES_DB: ${DB_NAME:-ai}
+    networks:
+      - agent-os
+
+  agno-backend-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${IMAGE_NAME:-agent-os}:${IMAGE_TAG:-latest}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 7777 --reload
+    restart: unless-stopped
+    ports:
+      - "7777:7777"
+    volumes:
+      - .:/app
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      DB_HOST: pgvector
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-ai}
+      DB_PASS: ${DB_PASSWORD:-ai}
+      DB_DATABASE: ${DB_NAME:-ai}
+      WAIT_FOR_DB: "True"
+      PRINT_ENV_ON_LOAD: "True"
+    networks:
+      - agent-os
+    depends_on:
+      - pgvector
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # agno-ui-orig:
+  #   image: node:25-bookworm-slim
+  #   command: ["bash", "-c", "npx create-agent-ui@latest && cd agent-ui && npm install && npm run dev"]
+  #   volumes:
+  #     - ./agno-ui:/agno-ui
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3010"
+  #   environment:
+  #     REACT_APP_API_URL: http://host.docker.internal:7777
+  #     OPENAI_MODEL_ID: gpt-5-mini
+  #     OPENAI_EMBEDDER_MODEL_ID: text-embedding-3-small
+  #     ANTHROPIC_MODEL_ID: claude-sonnet-4-5
+  #     GOOGLE_MODEL_ID: gemini-2.5-pro
+  #   networks:
+  #     - agent-os
+
+  agno-ui-custom:
+    image: node:25-bookworm-slim
+    volumes:
+      - ./agno-ui:/agno-ui
+    restart: unless-stopped
+    command: ["bash", "-c", "cd /agno-ui && npm install && npm run dev"]
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_URL: http://host.docker.internal:7777
+      OPENAI_MODEL_ID: gpt-5-mini
+      OPENAI_EMBEDDER_MODEL_ID: text-embedding-3-small
+      ANTHROPIC_MODEL_ID: claude-sonnet-4-5
+      GOOGLE_MODEL_ID: gemini-2.5-pro
+    networks:
+      - agent-os
+    depends_on:
+      - agno-backend-api
+
+
+networks:
+  agent-os:
+
+volumes:
+  pgdata:
