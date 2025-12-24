@@ -94,7 +94,7 @@ async def add_message(payload: MessageCreate) -> MessageResponse:
             session_id=payload.session_id,
             role=payload.role,
             content=payload.content,
-            metadata=payload.metadata,
+            message_metadata=payload.metadata,  # Fixed: use message_metadata parameter name
         )
         return MessageResponse(
             id=str(message_id),
@@ -168,5 +168,66 @@ async def clear_session(session_id: str) -> SessionResponse:
             session_id=session_id,
             status="cleared",
         )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.get("/sessions")
+async def list_sessions(
+    limit: int = 100,
+    user_id: Optional[str] = None,
+) -> dict:
+    """List all sessions with metadata."""
+    try:
+        sessions = memory_manager.list_sessions(limit=limit, user_id=user_id)
+        return {
+            "sessions": sessions,
+            "total": len(sessions),
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.get("/stats")
+async def get_memory_stats() -> dict:
+    """Get memory statistics across all sessions."""
+    try:
+        stats = memory_manager.get_stats()
+        return stats
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.delete("/sessions")
+async def clear_all_sessions() -> dict:
+    """Clear all sessions and messages."""
+    try:
+        count = memory_manager.clear_all_sessions()
+        return {
+            "status": "cleared",
+            "sessions_deleted": count,
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.get("/search")
+async def search_messages(
+    query: str,
+    session_id: Optional[str] = None,
+    limit: int = 50,
+) -> dict:
+    """Search messages by content."""
+    try:
+        results = memory_manager.search_messages(
+            query=query,
+            session_id=session_id,
+            limit=limit,
+        )
+        return {
+            "results": results,
+            "total": len(results),
+            "query": query,
+        }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

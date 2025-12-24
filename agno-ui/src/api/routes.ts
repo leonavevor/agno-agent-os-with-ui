@@ -31,10 +31,28 @@ export const APIRoutes = {
     `${agentOSUrl}/memory/sessions/${sessionId}/facts`,
   ClearMemorySession: (agentOSUrl: string, sessionId: string) =>
     `${agentOSUrl}/memory/sessions/${sessionId}`,
+  ListMemorySessions: (agentOSUrl: string) => `${agentOSUrl}/memory/sessions`,
+  GetMemoryStats: (agentOSUrl: string) => `${agentOSUrl}/memory/stats`,
+  ClearAllMemorySessions: (agentOSUrl: string) => `${agentOSUrl}/memory/sessions`,
+  SearchMemoryMessages: (agentOSUrl: string) => `${agentOSUrl}/memory/search`,
 
   // Reference search routes
   SearchReferences: (agentOSUrl: string) => `${agentOSUrl}/references/search`,
   EmbedReferences: (agentOSUrl: string) => `${agentOSUrl}/references/embed`,
   GetEmbeddingStatus: (agentOSUrl: string, skillId: string) =>
-    `${agentOSUrl}/references/skills/${skillId}/status`
+    `${agentOSUrl}/references/skills/${skillId}/status`,
+
+  // Knowledge base routes
+  UploadKnowledge: (agentOSUrl: string) => `${agentOSUrl}/knowledge/content`,
+  ListKnowledge: (agentOSUrl: string) => `${agentOSUrl}/knowledge/content`,
+  GetKnowledgeStatus: (agentOSUrl: string, contentId: string) =>
+    `${agentOSUrl}/knowledge/content/${contentId}/status`,
+  DeleteKnowledge: (agentOSUrl: string, contentId: string) =>
+    `${agentOSUrl}/knowledge/content/${contentId}`,
+  DeleteAllKnowledge: (agentOSUrl: string) => `${agentOSUrl}/knowledge/content`,
+  GetKnowledgeStats: (agentOSUrl: string) => `${agentOSUrl}/knowledge/stats`,
+  SearchKnowledge: (agentOSUrl: string) => `${agentOSUrl}/knowledge/search`,
+  UpdateKnowledgeMetadata: (agentOSUrl: string, contentId: string) =>
+    `${agentOSUrl}/knowledge/${contentId}/metadata`,
+  KnowledgeHealthCheck: (agentOSUrl: string) => `${agentOSUrl}/knowledge/health`
 }

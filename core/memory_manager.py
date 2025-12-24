@@ -151,3 +151,107 @@ class MemoryManager:
                 SessionMemory.session_id == session_id
             ).delete()
             session.commit()
+
+    def list_sessions(
+        self,
+        limit: int = 100,
+        user_id: Optional[str] = None,
+    ) -> List[dict]:
+        """List all sessions with metadata."""
+        with self.SessionLocal() as session:
+            query = session.query(SessionMemory)
+            if user_id:
+                query = query.filter(SessionMemory.user_id == user_id)
+
+            sessions = (
+                query.order_by(SessionMemory.updated_at.desc()).limit(limit).all()
+            )
+
+            result = []
+            for sess in sessions:
+                # Count messages for this session
+                message_count = (
+                    session.query(ChatMessage)
+                    .filter(ChatMessage.session_id == sess.session_id)
+                    .count()
+                )
+
+                result.append(
+                    {
+                        "session_id": sess.session_id,
+                        "user_id": sess.user_id,
+                        "message_count": message_count,
+                        "has_facts": bool(sess.learned_facts),
+                        "created_at": (
+                            sess.created_at.isoformat() if sess.created_at else None
+                        ),
+                        "updated_at": (
+                            sess.updated_at.isoformat() if sess.updated_at else None
+                        ),
+                        "learned_facts": sess.learned_facts,
+                    }
+                )
+
+            return result
+
+    def get_stats(self) -> dict:
+        """Get memory statistics across all sessions."""
+        with self.SessionLocal() as session:
+            total_sessions = session.query(SessionMemory).count()
+            total_messages = session.query(ChatMessage).count()
+            sessions_with_facts = (
+                session.query(SessionMemory)
+                .filter(SessionMemory.learned_facts.isnot(None))
+                .count()
+            )
+
+            return {
+                "total_sessions": total_sessions,
+                "total_messages": total_messages,
+                "sessions_with_facts": sessions_with_facts,
+                "average_messages_per_session": (
+                    total_messages / total_sessions if total_sessions > 0 else 0
+                ),
+            }
+
+    def clear_all_sessions(self) -> int:
+        """Delete all sessions and messages."""
+        with self.SessionLocal() as session:
+            count = session.query(SessionMemory).count()
+            session.query(ChatMessage).delete()
+            session.query(SessionMemory).delete()
+            session.commit()
+            return count
+
+    def search_messages(
+        self,
+        query: str,
+        session_id: Optional[str] = None,
+        limit: int = 50,
+    ) -> List[dict]:
+        """Search messages by content."""
+        with self.SessionLocal() as session:
+            query_obj = session.query(ChatMessage)
+
+            # Filter by content (case-insensitive)
+            query_obj = query_obj.filter(ChatMessage.content.ilike(f"%{query}%"))
+
+            # Filter by session if provided
+            if session_id:
+                query_obj = query_obj.filter(ChatMessage.session_id == session_id)
+
+            messages = (
+                query_obj.order_by(ChatMessage.timestamp.desc()).limit(limit).all()
+            )
+
+            return [
+                {
+                    "id": str(msg.id),
+                    "session_id": msg.session_id,
+                    "role": msg.role,
+                    "content": msg.content,
+                    "timestamp": msg.timestamp.isoformat(),
+                    "metadata": msg.message_metadata,
+                }
+                for msg in messages
+            ]

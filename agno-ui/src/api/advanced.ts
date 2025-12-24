@@ -240,6 +240,141 @@ export const deleteMemorySession = clearMemorySession
 // Get memory session history (alias for getChatHistory)
 export const getMemorySessionHistory = getChatHistory
 
+export interface MemorySession {
+    session_id: string
+    user_id: string | null
+    message_count: number
+    has_facts: boolean
+    created_at: string
+    updated_at: string
+}
+
+export interface MemoryStats {
+    total_sessions: number
+    total_messages: number
+    sessions_with_facts: number
+    average_messages_per_session: number
+}
+
+export interface MemorySearchResult {
+    id: string
+    session_id: string
+    role: string
+    content: string
+    timestamp: string
+}
+
+export const listMemorySessions = async (
+    endpoint: string,
+    limit: number = 100,
+    userId?: string,
+    authToken?: string
+): Promise<{ sessions: MemorySession[]; total: number }> => {
+    try {
+        const params = new URLSearchParams({ limit: limit.toString() })
+        if (userId) {
+            params.append('user_id', userId)
+        }
+
+        const response = await fetch(
+            `${APIRoutes.ListMemorySessions(endpoint)}?${params}`,
+            {
+                method: 'GET',
+                headers: createHeaders(authToken)
+            }
+        )
+
+        if (!response.ok) {
+            throw new Error(`Failed to list sessions: ${response.statusText}`)
+        }
+
+        return response.json()
+    } catch (error) {
+        toast.error('Failed to list memory sessions')
+        throw error
+    }
+}
+
+export const getMemoryStats = async (
+    endpoint: string,
+    authToken?: string
+): Promise<MemoryStats> => {
+    try {
+        const response = await fetch(
+            APIRoutes.GetMemoryStats(endpoint),
+            {
+                method: 'GET',
+                headers: createHeaders(authToken)
+            }
+        )
+
+        if (!response.ok) {
+            throw new Error(`Failed to get memory stats: ${response.statusText}`)
+        }
+
+        return response.json()
+    } catch (error) {
+        toast.error('Failed to get memory statistics')
+        throw error
+    }
+}
+
+export const clearAllMemorySessions = async (
+    endpoint: string,
+    authToken?: string
+): Promise<{ status: string; sessions_deleted: number }> => {
+    try {
+        const response = await fetch(
+            APIRoutes.ClearAllMemorySessions(endpoint),
+            {
+                method: 'DELETE',
+                headers: createHeaders(authToken)
+            }
+        )
+
+        if (!response.ok) {
+            throw new Error(`Failed to clear all sessions: ${response.statusText}`)
+        }
+
+        return response.json()
+    } catch (error) {
+        toast.error('Failed to clear all memory sessions')
+        throw error
+    }
+}
+
+export const searchMemoryMessages = async (
+    endpoint: string,
+    query: string,
+    sessionId?: string,
+    limit: number = 50,
+    authToken?: string
+): Promise<{ results: MemorySearchResult[]; total: number; query: string }> => {
+    try {
+        const params = new URLSearchParams({ query, limit: limit.toString() })
+        if (sessionId) {
+            params.append('session_id', sessionId)
+        }
+
+        const response = await fetch(
+            `${APIRoutes.SearchMemoryMessages(endpoint)}?${params}`,
+            {
+                method: 'GET',
+                headers: createHeaders(authToken)
+            }
+        )
+
+        if (!response.ok) {
+            throw new Error(`Failed to search messages: ${response.statusText}`)
+        }
+
+        return response.json()
+    } catch (error) {
+        toast.error('Failed to search memory messages')
+        throw error
+    }
+}
+
 // ============================================================================
 // Reference Search API
 // ============================================================================
@@ -330,6 +465,270 @@ export const getEmbeddingStatus = async (
     } catch (error) {
         console.error('Failed to check embedding status:', error)
         // Don't show toast for status checks
+        throw error
+    }
+}
+
+// ============================================================================
+// Knowledge Base API
+// ============================================================================
+
+export interface KnowledgeContent {
+    id: string
+    name: string
+    description?: string
+    type?: string
+    size?: string
+    metadata?: Record<string, any>
+    access_count?: number
+    status: 'pending' | 'processing' | 'completed' | 'failed'
+    status_message?: string
+    created_at: string
+    updated_at: string
+}
+
+export interface KnowledgeListResponse {
+    data: KnowledgeContent[]
+    meta: {
+        page: number
+        limit: number
+        total_pages: number
+        total_count: number
+    }
+}
+
+export const uploadKnowledge = async (
+    endpoint: string,
+    file: File,
+    description?: string,
+    metadata?: Record<string, any>,
+    authToken?: string
+): Promise<KnowledgeContent> => {
+    try {
+        const formData = new FormData()
+        formData.append('file', file)
+        if (description) {
+            formData.append('description', description)
+        }
+        if (metadata) {
+            formData.append('metadata', JSON.stringify(metadata))
+        }
+
+        const response = await fetch(APIRoutes.UploadKnowledge(endpoint), {
+            method: 'POST',
+            headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+            body: formData
+        })
+
+        if (!response.ok) {
+            throw new Error(`Failed to upload knowledge: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        toast.success(`Uploaded: ${file.name}`)
+        return data
+    } catch (error) {
+        toast.error('Failed to upload knowledge')
+        throw error
+    }
+}
+
+export const listKnowledge = async (
+    endpoint: string,
+    page: number = 1,
+    limit: number = 20,
+    authToken?: string
+): Promise<KnowledgeListResponse> => {
+    try {
+        const url = new URL(APIRoutes.ListKnowledge(endpoint))
+        url.searchParams.append('page', page.toString())
+        url.searchParams.append('limit', limit.toString())
+
+        const response = await fetch(url.toString(), {
+            method: 'GET',
+            headers: createHeaders(authToken)
+        })
+
+        if (!response.ok) {
+            throw new Error(`Failed to list knowledge: ${response.statusText}`)
+        }
+
+        return response.json()
+    } catch (error) {
+        toast.error('Failed to load knowledge list')
+        throw error
+    }
+}
+
+export const getKnowledgeStatus = async (
+    endpoint: string,
+    contentId: string,
+    authToken?: string
+): Promise<KnowledgeContent> => {
+    try {
+        const response = await fetch(
+            APIRoutes.GetKnowledgeStatus(endpoint, contentId),
+            {
+                method: 'GET',
+                headers: createHeaders(authToken)
+            }
+        )
+
+        if (!response.ok) {
+            throw new Error(
+                `Failed to get knowledge status: ${response.statusText}`
+            )
+        }
+
+        return response.json()
+    } catch (error) {
+        console.error('Failed to check knowledge status:', error)
+        throw error
+    }
+}
+
+export const deleteKnowledge = async (
+    endpoint: string,
+    contentId: string,
+    authToken?: string
+): Promise<void> => {
+    try {
+        const response = await fetch(
+            APIRoutes.DeleteKnowledge(endpoint, contentId),
+            {
+                method: 'DELETE',
+                headers: createHeaders(authToken)
+            }
+        )
+
+        if (!response.ok) {
+            throw new Error(`Failed to delete knowledge: ${response.statusText}`)
+        }
+
+        toast.success('Knowledge deleted successfully')
+    } catch (error) {
+        toast.error('Failed to delete knowledge')
+        throw error
+    }
+}
+
+export const deleteAllKnowledge = async (
+    endpoint: string,
+    authToken?: string
+): Promise<void> => {
+    try {
+        const response = await fetch(
+            APIRoutes.DeleteAllKnowledge(endpoint),
+            {
+                method: 'DELETE',
+                headers: createHeaders(authToken)
+            }
+        )
+
+        if (!response.ok) {
+            throw new Error(
+                `Failed to delete all knowledge: ${response.statusText}`
+            )
+        }
+
+        toast.success('All knowledge deleted successfully')
+    } catch (error) {
+        toast.error('Failed to delete all knowledge')
+        throw error
+    }
+}
+
+export interface KnowledgeStats {
+    total: number
+    completed: number
+    processing: number
+    pending: number
+    failed: number
+    total_size: number
+    total_access_count: number
+}
+
+export const getKnowledgeStats = async (
+    endpoint: string,
+    authToken?: string
+): Promise<KnowledgeStats> => {
+    try {
+        const response = await fetch(
+            APIRoutes.GetKnowledgeStats(endpoint),
+            {
+                method: 'GET',
+                headers: createHeaders(authToken)
+            }
+        )
+
+        if (!response.ok) {
+            throw new Error(`Failed to get stats: ${response.statusText}`)
+        }
+
+        return response.json()
+    } catch (error) {
+        console.error('Failed to get knowledge stats:', error)
+        throw error
+    }
+}
+
+export const searchKnowledge = async (
+    endpoint: string,
+    query: string,
+    status?: string,
+    page: number = 1,
+    limit: number = 20,
+    authToken?: string
+): Promise<KnowledgeListResponse> => {
+    try {
+        const url = new URL(APIRoutes.SearchKnowledge(endpoint))
+        url.searchParams.append('q', query)
+        if (status) url.searchParams.append('status', status)
+        url.searchParams.append('page', page.toString())
+        url.searchParams.append('limit', limit.toString())
+
+        const response = await fetch(url.toString(), {
+            method: 'GET',
+            headers: createHeaders(authToken)
+        })
+
+        if (!response.ok) {
+            throw new Error(`Search failed: ${response.statusText}`)
+        }
+
+        return response.json()
+    } catch (error) {
+        toast.error('Failed to search knowledge')
+        throw error
+    }
+}
+
+export const checkKnowledgeHealth = async (
+    endpoint: string,
+    authToken?: string
+): Promise<{
+    status: string
+    has_knowledge_base: boolean
+    has_embedder: boolean
+    can_list_content: boolean
+    message: string
+}> => {
+    try {
+        const response = await fetch(
+            APIRoutes.KnowledgeHealthCheck(endpoint),
+            {
+                method: 'GET',
+                headers: createHeaders(authToken)
+            }
+        )
+
+        if (!response.ok) {
+            throw new Error(`Health check failed: ${response.statusText}`)
+        }
+
+        return response.json()
+    } catch (error) {
+        console.error('Health check failed:', error)
         throw error
     }
 }

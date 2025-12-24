@@ -38,7 +38,8 @@ import {
   Trash,
   Database,
   Loader2,
-  Info
+  Info,
+  Upload
 } from 'lucide-react'
 
 import { PlusIcon } from '@radix-ui/react-icons'
@@ -81,5 +82,6 @@ export const ICONS: IconTypeMap = {
   trash: Trash,
   database: Database,
   loader: Loader2,
-  info: Info
+  info: Info,
+  upload: Upload
 }

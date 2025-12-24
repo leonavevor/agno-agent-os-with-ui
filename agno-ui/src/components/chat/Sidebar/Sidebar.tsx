@@ -17,6 +17,7 @@ import { truncateText } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import SkillCatalog from './SkillCatalog'
 import MemorySettings from './MemorySettings'
+import KnowledgeUpload from './KnowledgeUpload'
 import { SidebarSection } from './SidebarSection'
 
 const ENDPOINT_PLACEHOLDER = 'NO ENDPOINT ADDED'
@@ -301,6 +302,9 @@ const Sidebar = ({
                 </SidebarSection>
                 <SidebarSection title="Skills" defaultOpen={false}>
                   <SkillCatalog />
+                </SidebarSection>
+                <SidebarSection title="Knowledge" defaultOpen={false}>
+                  <KnowledgeUpload />
                 </SidebarSection>
                 {process.env.NEXT_PUBLIC_ENABLE_MEMORY === 'true' && (
                   <SidebarSection title="Memory" defaultOpen={false}>
