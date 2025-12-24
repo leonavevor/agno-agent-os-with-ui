@@ -23,6 +23,7 @@ import { SystemHealthIndicator } from '@/components/SystemHealthIndicator'
 import { ModelSelector } from '@/components/ModelSelector'
 import { SkillsModal } from '@/components/SkillsModal'
 import { ProjectModal } from '@/components/ProjectModal'
+import { MetricsModal } from '@/components/MetricsModal'
 
 const ENDPOINT_PLACEHOLDER = 'NO ENDPOINT ADDED'
 const SidebarHeader = () => (
@@ -219,6 +220,7 @@ const Sidebar = ({
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [skillsModalOpen, setSkillsModalOpen] = useState(false)
   const [projectModalOpen, setProjectModalOpen] = useState(false)
+  const [metricsModalOpen, setMetricsModalOpen] = useState(false)
   const { clearChat, focusChatInput, initialize } = useChatActions()
   const {
     messages,
@@ -342,6 +344,16 @@ const Sidebar = ({
                   <SidebarSection title="Sessions" defaultOpen={false}>
                     <Sessions />
                   </SidebarSection>
+                  <SidebarSection title="Misc" defaultOpen={false}>
+                    <Button
+                      variant="outline"
+                      onClick={() => setMetricsModalOpen(true)}
+                      className="h-9 w-full rounded-xl bg-accent/30 text-xs font-medium uppercase text-muted-foreground hover:bg-accent/50 hover:text-primary/90 transition-colors border-0"
+                    >
+                      <Icon type="database" size="xs" />
+                      <span className="ml-2">Metrics</span>
+                    </Button>
+                  </SidebarSection>
                 </>
               )}
             </>
@@ -353,6 +365,11 @@ const Sidebar = ({
       </motion.div>
       <SkillsModal open={skillsModalOpen} onOpenChange={setSkillsModalOpen} />
       <ProjectModal open={projectModalOpen} onOpenChange={setProjectModalOpen} />
+      <MetricsModal
+        open={metricsModalOpen}
+        onOpenChange={setMetricsModalOpen}
+        apiUrl={selectedEndpoint}
+      />
     </motion.aside>
   )
 }

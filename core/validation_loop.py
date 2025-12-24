@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import uuid
 from typing import Any, Callable, Optional, Type, TypeVar
 
 from agno.agent import Agent
 from pydantic import BaseModel, ValidationError
+
+from .hallucination_detector import get_hallucination_detector
+from .metrics_collector import ExecutionMetrics, get_metrics_collector
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -17,16 +21,17 @@ class ValidationLoop:
         self,
         agent: Agent,
         max_retries: int = 2,
+        enable_metrics: bool = True,
+        enable_hallucination_check: bool = True,
     ) -> None:
         self.agent = agent
         self.max_retries = max_retries
-
-    def validate_and_fix(
-        self,
-        response_text: str,
-        schema: Type[T],
-        *,
-        transform_fn: Optional[Callable[[str], dict[str, Any]]] = None,
+        self.enable_metrics = enable_metrics
+        self.enable_hallucination_check = enable_hallucination_check
+        self.metrics_collector = get_metrics_collector() if enable_metrics else None
+        self.hallucination_detector = (
+            get_hallucination_detector() if enable_hallucination_check else None
+        input_context: Optional[str] = None,
     ) -> T:
         """
         Validate LLM response against Pydantic schema with retry on failure.
@@ -35,12 +40,62 @@ class ValidationLoop:
             response_text: Raw LLM response
             schema: Pydantic model class to validate against
             transform_fn: Optional function to extract dict from response_text
+            input_context: Optional input context for metrics tracking
 
         Returns:
             Validated Pydantic model instance
 
         Raises:
             ValidationError: If validation fails after max_retries
+        """
+        # Initialize metrics tracking
+        execution_id = str(uuid.uuid4())
+        metrics: Optional[ExecutionMetrics] = None
+        if self.metrics_collector:
+            metrics = self.metrics_collector.create_execution(
+                execution_id=execution_id,
+                agent_name=getattr(self.agent, "name", "unknown"),
+                schema_name=schema.__name__,
+            )
+            metrics.input_text = input_context or response_text[:500]
+            metrics.performance.agent_name = getattr(self.agent, "name", "unknown")
+ schema: Pydantic model class to validate against
+            transform_fn: Optional function to extract dict from response_text
+
+        Returns:
+            Validated sult = schema.model_validate(data)
+                else:
+                    # Assume JSON string
+                    result = schema.model_validate_json(current_response)
+
+                # Success - update metrics and check for hallucinations
+                if metrics:
+                    metrics.performance.end()
+                    metrics.output_text = current_response[:500]
+
+                    # Check for hallucinations if enabled
+                    if self.hallucination_detector:
+                        validation_metrics = self.hallucination_detector.check_response(
+                            response_text=current_response,
+                            context=input_context,
+                        )
+                        metrics.validation = validation_metrics
+
+                    # Mark as valid if no hallucination check or passed
+                    if not self.hallucination_detector:
+                        from .metrics_collector import ValidationStatus
+
+                        metrics.validation.status = ValidationStatus.VALID
+                        metrics.validation.confidence_score = 1.0
+update metrics and re-raise
+                    if metrics:
+                        metrics.performance.end()
+                        metrics.error = str(e)
+                        from .metrics_collector import ValidationStatus
+
+                        metrics.validation.status = ValidationStatus.INVALID
+                        metrics.validation.confidence_score = 0.0
+                return result
         """
         attempt = 0
         current_response = response_text

@@ -12,6 +12,7 @@ from app.api.models import router as models_router
 from app.api.references import router as references_router
 from app.api.skills import router as skills_router
 from app.api.knowledge import router as knowledge_router
+from app.api.metrics import router as metrics_router
 from teams.multilingual_team import multilingual_team
 from teams.reasoning_finance_team import reasoning_research_team
 from workflows.investment_workflow import investment_workflow
@@ -40,6 +41,7 @@ app.include_router(skills_router)
 app.include_router(memory_router)
 app.include_router(references_router)
 app.include_router(knowledge_router)
+app.include_router(metrics_router)
 
 if __name__ == "__main__":
     # Serve the application
