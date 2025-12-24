@@ -72,6 +72,12 @@ interface Store {
   setRecommendedSkills: (skills: SkillMetadata[]) => void
   isRoutingSkills: boolean
   setIsRoutingSkills: (isRouting: boolean) => void
+  mcpServers: MCPServerMetadata[]
+  setMCPServers: (servers: MCPServerMetadata[]) => void
+  isMCPServersLoading: boolean
+  setIsMCPServersLoading: (isLoading: boolean) => void
+  enabledMCPServers: Set<string>
+  setEnabledMCPServers: (serverIds: Set<string>) => void
   systemHealth: {
     status: 'healthy' | 'degraded' | 'down' | 'checking'
     backendConnected: boolean
@@ -166,6 +172,14 @@ export const useStore = create<Store>()(
       isRoutingSkills: false,
       setIsRoutingSkills: (isRouting) =>
         set(() => ({ isRoutingSkills: isRouting })),
+      mcpServers: [],
+      setMCPServers: (servers) => set(() => ({ mcpServers: servers })),
+      isMCPServersLoading: false,
+      setIsMCPServersLoading: (isLoading) =>
+        set(() => ({ isMCPServersLoading: isLoading })),
+      enabledMCPServers: new Set(),
+      setEnabledMCPServers: (serverIds) =>
+        set(() => ({ enabledMCPServers: serverIds })),
       systemHealth: {
         status: 'checking',
         backendConnected: false,

@@ -7,12 +7,19 @@ import { toast } from 'sonner'
 import { useStore } from '@/store'
 import {
     uploadKnowledge,
+    bulkUploadKnowledge,
     listKnowledge,
     deleteKnowledge,
     deleteAllKnowledge,
     getKnowledgeStatus,
     type KnowledgeContent
 } from '@/api/advanced'
+import {
+    validateFile,
+    validateFiles,
+    getAcceptAttribute,
+    formatFileSize,
+} from '@/config/upload'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -49,7 +56,9 @@ export default function KnowledgeUpload() {
     const [selectedItem, setSelectedItem] = useState<KnowledgeContent | null>(null)
     const [searchQuery, setSearchQuery] = useState('')
     const [statusFilter, setStatusFilter] = useState<'all' | KnowledgeContent['status']>('all')
+    const [uploadMode, setUploadMode] = useState<'files' | 'folder'>('files')
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const folderInputRef = useRef<HTMLInputElement>(null)
     const { selectedEndpoint, authToken } = useStore()
 
     const loadKnowledge = async () => {
@@ -97,19 +106,107 @@ export default function KnowledgeUpload() {
         const files = event.target.files
         if (!files || files.length === 0 || !selectedEndpoint) return
 
+        // Validate all files before upload
+        const filesArray = Array.from(files)
+        const validationResults = validateFiles(filesArray)
+        
+        // Check for validation errors
+        const invalidFiles = validationResults.filter(r => !r.valid)
+        if (invalidFiles.length > 0) {
+            // Show first error
+            toast.error(invalidFiles[0].error || 'File validation failed')
+            
+            // Show summary if multiple files failed
+            if (invalidFiles.length > 1) {
+                toast.error(`${invalidFiles.length} files failed validation`)
+            }
+            
+            if (fileInputRef.current) {
+                fileInputRef.current.value = ''
+            }
+            return
+        }
+
         setIsUploading(true)
         try {
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i]
+            for (let i = 0; i < filesArray.length; i++) {
+                const file = filesArray[i]
                 await uploadKnowledge(selectedEndpoint, file, undefined, undefined, authToken)
             }
             await loadKnowledge()
+            toast.success(`Successfully uploaded ${filesArray.length} file(s)`)
         } catch (error) {
             console.error('Upload failed:', error)
+            toast.error('Some files failed to upload')
         } finally {
             setIsUploading(false)
             if (fileInputRef.current) {
                 fileInputRef.current.value = ''
+            }
+        }
+    }
+
+    const handleFolderSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files
+        if (!files || files.length === 0 || !selectedEndpoint) return
+
+        // Extract relative paths and validate files
+        const filesArray = Array.from(files)
+        
+        // Validate all files before upload
+        const validationResults = validateFiles(filesArray)
+        
+        // Filter out invalid files and show errors
+        const validFiles: File[] = []
+        const relativePaths: Record<string, string> = {}
+        let validIndex = 0
+        
+        filesArray.forEach((file, index) => {
+            const result = validationResults[index]
+            
+            if (result.valid) {
+                validFiles.push(file)
+                const relativePath = (file as any).webkitRelativePath || file.name
+                relativePaths[validIndex.toString()] = relativePath
+                validIndex++
+            } else {
+                toast.error(`${file.name}: ${result.error}`)
+            }
+        })
+        
+        if (validFiles.length === 0) {
+            toast.error('No valid files to upload')
+            if (folderInputRef.current) {
+                folderInputRef.current.value = ''
+            }
+            return
+        }
+        
+        // Show warning if some files were filtered
+        const filteredCount = filesArray.length - validFiles.length
+        if (filteredCount > 0) {
+            toast.warning(`${filteredCount} file(s) skipped due to validation errors`)
+        }
+
+        setIsUploading(true)
+        try {
+            // Bulk upload with relative paths preserved
+            await bulkUploadKnowledge(
+                selectedEndpoint,
+                validFiles,
+                relativePaths,
+                undefined,
+                authToken
+            )
+            
+            await loadKnowledge()
+        } catch (error) {
+            console.error('Folder upload failed:', error)
+            toast.error('Folder upload failed')
+        } finally {
+            setIsUploading(false)
+            if (folderInputRef.current) {
+                folderInputRef.current.value = ''
             }
         }
     }
@@ -253,14 +350,59 @@ export default function KnowledgeUpload() {
                 ref={fileInputRef}
                 type="file"
                 multiple
-                accept=".pdf,.txt,.md,.doc,.docx,.csv,.json"
+                accept={getAcceptAttribute()}
                 onChange={handleFileSelect}
                 className="hidden"
                 id="knowledge-upload"
             />
 
+            <input
+                ref={folderInputRef}
+                type="file"
+                accept={getAcceptAttribute()}
+                // @ts-ignore - webkitdirectory is not in the TypeScript types
+                webkitdirectory="true"
+                directory="true"
+                multiple
+                onChange={handleFolderSelect}
+                className="hidden"
+                id="folder-upload"
+            />
+
+            {/* Upload Mode Toggle */}
+            <div className="flex gap-1 mb-2">
+                <button
+                    onClick={() => setUploadMode('files')}
+                    className={`flex-1 rounded-lg px-3 py-1.5 text-[10px] font-medium uppercase transition-colors ${
+                        uploadMode === 'files'
+                            ? 'bg-primary text-background'
+                            : 'bg-accent/50 text-muted/70 hover:bg-accent'
+                    }`}
+                >
+                    <Icon type="database" size="xs" className={uploadMode === 'files' ? 'text-background' : 'text-muted/70'} />
+                    Files
+                </button>
+                <button
+                    onClick={() => setUploadMode('folder')}
+                    className={`flex-1 rounded-lg px-3 py-1.5 text-[10px] font-medium uppercase transition-colors ${
+                        uploadMode === 'folder'
+                            ? 'bg-primary text-background'
+                            : 'bg-accent/50 text-muted/70 hover:bg-accent'
+                    }`}
+                >
+                    <Icon type="folder" size="xs" className={uploadMode === 'folder' ? 'text-background' : 'text-muted/70'} />
+                    Folder
+                </button>
+            </div>
+
+            {/* File Type Info */}
+            <div className="mb-2 rounded-lg border border-blue-500/20 bg-blue-500/5 p-2 text-[9px] text-blue-400/80">
+                <div className="font-medium mb-1">📎 Allowed: Docs, Images, Audio, Video (100MB max)</div>
+                <div className="text-blue-400/60">🚫 Blocked: Executables, Archives, Large Files</div>
+            </div>
+
             <Button
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => uploadMode === 'files' ? fileInputRef.current?.click() : folderInputRef.current?.click()}
                 disabled={isUploading || !selectedEndpoint}
                 size="lg"
                 className="h-9 w-full rounded-xl bg-primary text-xs font-medium text-background hover:bg-primary/80"
@@ -273,7 +415,9 @@ export default function KnowledgeUpload() {
                 ) : (
                     <>
                         <Icon type="upload" size="xs" className="text-background" />
-                        <span className="uppercase">Upload Knowledge</span>
+                        <span className="uppercase">
+                            {uploadMode === 'folder' ? 'Upload Folder' : 'Upload Files'}
+                        </span>
                     </>
                 )}
             </Button>
@@ -309,11 +453,19 @@ export default function KnowledgeUpload() {
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-2">
+                                            {item.metadata?.upload_type === 'bulk_folder' && (
+                                                <Icon type="folder" size="xs" className="text-emerald-400/70 flex-shrink-0" />
+                                            )}
                                             <span className="truncate text-[11px] font-semibold text-primary">
                                                 {item.name}
                                             </span>
                                             {getStatusBadge(item.status)}
                                         </div>
+                                        {item.metadata?.relative_path && (
+                                            <div className="mt-0.5 text-[9px] text-muted/60 truncate">
+                                                {item.metadata.relative_path}
+                                            </div>
+                                        )}
                                         <div className="mt-1 flex items-center gap-2 text-[10px] text-muted/70">
                                             <span>{formatFileSize(item.size)}</span>
                                             <span>•</span>
@@ -458,12 +610,21 @@ export default function KnowledgeUpload() {
 
                                     {selectedItem.metadata && Object.keys(selectedItem.metadata).length > 0 && (
                                         <div className="rounded-lg border border-primary/10 bg-accent/30 p-3">
-                                            <div className="text-[10px] text-muted/70 uppercase font-medium mb-2">Metadata</div>
+                                            <div className="text-[10px] text-muted/70 uppercase font-medium mb-2">
+                                                Metadata
+                                                {selectedItem.metadata.upload_type === 'bulk_folder' && (
+                                                    <span className="ml-2 text-emerald-400/70">(Folder Upload)</span>
+                                                )}
+                                            </div>
                                             <div className="space-y-1 text-xs">
                                                 {Object.entries(selectedItem.metadata).map(([key, value]) => (
                                                     <div key={key} className="flex justify-between gap-2">
-                                                        <span className="text-muted/70">{key}:</span>
-                                                        <span className="font-medium text-right break-all">{String(value)}</span>
+                                                        <span className={`text-muted/70 ${key === 'relative_path' ? 'font-semibold text-primary/70' : ''}`}>
+                                                            {key === 'relative_path' ? '📁 ' : ''}{key}:
+                                                        </span>
+                                                        <span className={`font-medium text-right break-all ${key === 'relative_path' ? 'text-primary' : ''}`}>
+                                                            {String(value)}
+                                                        </span>
                                                     </div>
                                                 ))}
                                             </div>

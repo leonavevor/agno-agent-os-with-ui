@@ -21,6 +21,16 @@ export const APIRoutes = {
   ReloadSkills: (agentOSUrl: string) => `${agentOSUrl}/skills/reload`,
   CreateSkill: (agentOSUrl: string) => `${agentOSUrl}/skills/create`,
 
+  // MCP Server routes
+  GetMCPServers: (agentOSUrl: string) => `${agentOSUrl}/mcp-servers`,
+  GetMCPServer: (agentOSUrl: string, serverId: string) =>
+    `${agentOSUrl}/mcp-servers/${serverId}`,
+  CreateMCPServer: (agentOSUrl: string) => `${agentOSUrl}/mcp-servers`,
+  UpdateMCPServer: (agentOSUrl: string, serverId: string) =>
+    `${agentOSUrl}/mcp-servers/${serverId}`,
+  DeleteMCPServer: (agentOSUrl: string, serverId: string) =>
+    `${agentOSUrl}/mcp-servers/${serverId}`,
+
   // Memory routes
   InitializeSession: (agentOSUrl: string) => `${agentOSUrl}/memory/sessions`,
   AddMessage: (agentOSUrl: string) => `${agentOSUrl}/memory/messages`,
@@ -45,6 +55,7 @@ export const APIRoutes = {
 
   // Knowledge base routes
   UploadKnowledge: (agentOSUrl: string) => `${agentOSUrl}/knowledge/content`,
+  BulkUploadKnowledge: (agentOSUrl: string) => `${agentOSUrl}/knowledge/content/bulk`,
   ListKnowledge: (agentOSUrl: string) => `${agentOSUrl}/knowledge/content`,
   GetKnowledgeStatus: (agentOSUrl: string, contentId: string) =>
     `${agentOSUrl}/knowledge/content/${contentId}/status`,

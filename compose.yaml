@@ -32,6 +32,8 @@ services:
     working_dir: /app
     volumes:
       - .:/app
+      - knowledge_storage:/app/knowledge_storage  # Persistent storage for uploaded files
+      - mcp_servers_config:/app/config  # Persistent storage for MCP server configs
     environment:
       # Database
       DB_HOST: pgvector
@@ -137,3 +139,5 @@ networks:
 
 volumes:
   pgdata:
+  knowledge_storage:  # Persistent volume for uploaded knowledge files with folder structure
+  mcp_servers_config:  # Persistent volume for MCP server configurations

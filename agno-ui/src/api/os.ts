@@ -4,10 +4,14 @@ import { APIRoutes } from './routes'
 
 import {
   AgentDetails,
+  CreateMCPServerPayload,
+  MCPServerMetadata,
+  MCPServerResponse,
   Sessions,
   SkillMetadata,
   SkillRouteResponse,
-  TeamDetails
+  TeamDetails,
+  UpdateMCPServerPayload
 } from '@/types/os'
 
 // Helper function to create headers with optional auth token
@@ -301,3 +305,137 @@ export const deleteTeamSessionAPI = async (
   }
   return response
 }
+
+// ============================================
+// MCP Server APIs
+// ============================================
+
+export const getMCPServersAPI = async (
+  endpoint: string,
+  authToken?: string
+): Promise<MCPServerMetadata[]> => {
+  const url = APIRoutes.GetMCPServers(endpoint)
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: createHeaders(authToken)
+    })
+
+    if (!response.ok) {
+      toast.error(`Failed to fetch MCP servers: ${response.statusText}`)
+      return []
+    }
+
+    return (await response.json()) as MCPServerMetadata[]
+  } catch {
+    toast.error('Error fetching MCP servers')
+    return []
+  }
+}
+
+export const getMCPServerAPI = async (
+  endpoint: string,
+  serverId: string,
+  authToken?: string
+): Promise<MCPServerMetadata | null> => {
+  try {
+    const response = await fetch(APIRoutes.GetMCPServer(endpoint, serverId), {
+      method: 'GET',
+      headers: createHeaders(authToken)
+    })
+
+    if (!response.ok) {
+      toast.error(`Failed to fetch MCP server: ${response.statusText}`)
+      return null
+    }
+
+    return (await response.json()) as MCPServerMetadata
+  } catch {
+    toast.error('Error fetching MCP server')
+    return null
+  }
+}
+
+export const createMCPServerAPI = async (
+  endpoint: string,
+  payload: CreateMCPServerPayload,
+  authToken?: string
+): Promise<MCPServerResponse | null> => {
+  try {
+    const response = await fetch(APIRoutes.CreateMCPServer(endpoint), {
+      method: 'POST',
+      headers: createHeaders(authToken),
+      body: JSON.stringify(payload)
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const errorMessage = errorData.detail || response.statusText
+      toast.error(`Failed to create MCP server: ${errorMessage}`)
+      return null
+    }
+
+    const data = (await response.json()) as MCPServerResponse
+    toast.success(data.message || 'MCP server created successfully')
+    return data
+  } catch (error) {
+    toast.error('Error creating MCP server')
+    return null
+  }
+}
+
+export const updateMCPServerAPI = async (
+  endpoint: string,
+  serverId: string,
+  payload: UpdateMCPServerPayload,
+  authToken?: string
+): Promise<MCPServerMetadata | null> => {
+  try {
+    const response = await fetch(APIRoutes.UpdateMCPServer(endpoint, serverId), {
+      method: 'PATCH',
+      headers: createHeaders(authToken),
+      body: JSON.stringify(payload)
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const errorMessage = errorData.detail || response.statusText
+      toast.error(`Failed to update MCP server: ${errorMessage}`)
+      return null
+    }
+
+    const data = (await response.json()) as MCPServerMetadata
+    toast.success('MCP server updated successfully')
+    return data
+  } catch (error) {
+    toast.error('Error updating MCP server')
+    return null
+  }
+}
+
+export const deleteMCPServerAPI = async (
+  endpoint: string,
+  serverId: string,
+  authToken?: string
+): Promise<boolean> => {
+  try {
+    const response = await fetch(APIRoutes.DeleteMCPServer(endpoint, serverId), {
+      method: 'DELETE',
+      headers: createHeaders(authToken)
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const errorMessage = errorData.detail || response.statusText
+      toast.error(`Failed to delete MCP server: ${errorMessage}`)
+      return false
+    }
+
+    toast.success('MCP server deleted successfully')
+    return true
+  } catch (error) {
+    toast.error('Error deleting MCP server')
+    return false
+  }
+}
+

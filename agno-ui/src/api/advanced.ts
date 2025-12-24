@@ -533,6 +533,72 @@ export const uploadKnowledge = async (
     }
 }
 
+export interface BulkUploadResult {
+    filename: string
+    relative_path: string
+    status: 'success' | 'error'
+    content_id?: string
+    message: string
+}
+
+export interface BulkUploadResponse {
+    summary: {
+        total: number
+        success: number
+        failed: number
+    }
+    results: BulkUploadResult[]
+}
+
+export const bulkUploadKnowledge = async (
+    endpoint: string,
+    files: File[],
+    relativePaths: Record<string, string>,
+    descriptions?: Record<string, string>,
+    authToken?: string
+): Promise<BulkUploadResponse> => {
+    try {
+        const formData = new FormData()
+        
+        // Append all files
+        files.forEach((file) => {
+            formData.append('files', file)
+        })
+        
+        // Append relative paths as JSON
+        formData.append('relative_paths', JSON.stringify(relativePaths))
+        
+        // Append descriptions if provided
+        if (descriptions) {
+            formData.append('descriptions', JSON.stringify(descriptions))
+        }
+
+        const response = await fetch(APIRoutes.BulkUploadKnowledge(endpoint), {
+            method: 'POST',
+            headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+            body: formData
+        })
+
+        if (!response.ok) {
+            throw new Error(`Failed to bulk upload knowledge: ${response.statusText}`)
+        }
+
+        const data: BulkUploadResponse = await response.json()
+        
+        if (data.summary.success > 0) {
+            toast.success(`Successfully uploaded ${data.summary.success} of ${data.summary.total} files`)
+        }
+        if (data.summary.failed > 0) {
+            toast.warning(`Failed to upload ${data.summary.failed} files`)
+        }
+        
+        return data
+    } catch (error) {
+        toast.error('Failed to bulk upload knowledge')
+        throw error
+    }
+}
+
 export const listKnowledge = async (
     endpoint: string,
     page: number = 1,

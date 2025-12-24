@@ -40,6 +40,51 @@ export interface SkillRouteResponse {
   skills: SkillMetadata[]
 }
 
+export interface MCPServerMetadata {
+  id: string
+  name: string
+  description: string
+  command: string
+  args?: string[]
+  env?: Record<string, string>
+  transport: string
+  url?: string | null
+  enabled: boolean
+  tags: string[]
+  version?: string | null
+}
+
+export interface CreateMCPServerPayload {
+  name: string
+  description: string
+  command: string
+  args?: string[]
+  env?: Record<string, string>
+  transport?: string
+  url?: string | null
+  tags?: string[]
+  version?: string
+}
+
+export interface UpdateMCPServerPayload {
+  name?: string
+  description?: string
+  command?: string
+  args?: string[]
+  env?: Record<string, string>
+  transport?: string
+  url?: string | null
+  enabled?: boolean
+  tags?: string[]
+  version?: string
+}
+
+export interface MCPServerResponse {
+  status: string
+  server: MCPServerMetadata
+  message: string
+}
+
 export interface ModelInfo {
   id: string
   name: string
