@@ -27,6 +27,19 @@ export interface ReasoningProps {
   reasoning: ReasoningSteps[]
 }
 
+export interface SkillMetadata {
+  id: string
+  name: string
+  description: string
+  tags: string[]
+  match_terms: string[]
+  version?: string | null
+}
+
+export interface SkillRouteResponse {
+  skills: SkillMetadata[]
+}
+
 export type ToolCallProps = {
   tools: ToolCall
 }

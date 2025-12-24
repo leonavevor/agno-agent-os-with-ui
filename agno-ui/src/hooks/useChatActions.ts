@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { useStore } from '../store'
 
 import { AgentDetails, TeamDetails, type ChatMessage } from '@/types/os'
-import { getAgentsAPI, getStatusAPI, getTeamsAPI } from '@/api/os'
+import { getAgentsAPI, getSkillsAPI, getStatusAPI, getTeamsAPI } from '@/api/os'
 import { useQueryState } from 'nuqs'
 
 const useChatActions = () => {
@@ -17,6 +17,9 @@ const useChatActions = () => {
   const setIsEndpointLoading = useStore((state) => state.setIsEndpointLoading)
   const setAgents = useStore((state) => state.setAgents)
   const setTeams = useStore((state) => state.setTeams)
+  const setSkills = useStore((state) => state.setSkills)
+  const setIsSkillsLoading = useStore((state) => state.setIsSkillsLoading)
+  const setSkillSearchQuery = useStore((state) => state.setSkillSearchQuery)
   const setSelectedModel = useStore((state) => state.setSelectedModel)
   const setMode = useStore((state) => state.setMode)
   const [agentId, setAgentId] = useQueryState('agent')
@@ -52,6 +55,16 @@ const useChatActions = () => {
     }
   }, [selectedEndpoint, authToken])
 
+  const getSkills = useCallback(async () => {
+    try {
+      const skills = await getSkillsAPI(selectedEndpoint, authToken)
+      return skills
+    } catch {
+      toast.error('Error fetching skills')
+      return []
+    }
+  }, [selectedEndpoint, authToken])
+
   const clearChat = useCallback(() => {
     setMessages([])
     setSessionId(null)
@@ -78,10 +91,14 @@ const useChatActions = () => {
       const status = await getStatus()
       let agents: AgentDetails[] = []
       let teams: TeamDetails[] = []
+      setIsSkillsLoading(true)
       if (status === 200) {
         setIsEndpointActive(true)
         teams = await getTeams()
         agents = await getAgents()
+        const skills = await getSkills()
+        setSkills(skills)
+        setSkillSearchQuery('')
 
         if (!agentId && !teamId) {
           const currentMode = useStore.getState().mode
@@ -142,6 +159,8 @@ const useChatActions = () => {
         setSelectedModel('')
         setAgentId(null)
         setTeamId(null)
+        setSkills([])
+        setSkillSearchQuery('')
       }
       return { agents, teams }
     } catch (error) {
@@ -153,13 +172,17 @@ const useChatActions = () => {
       setTeamId(null)
       setAgents([])
       setTeams([])
+      setSkills([])
+      setSkillSearchQuery('')
     } finally {
+      setIsSkillsLoading(false)
       setIsEndpointLoading(false)
     }
   }, [
     getStatus,
     getAgents,
     getTeams,
+    getSkills,
     setIsEndpointActive,
     setIsEndpointLoading,
     setAgents,
@@ -169,6 +192,7 @@ const useChatActions = () => {
     setMode,
     setTeamId,
     setDbId,
+    setSkillSearchQuery,
     agentId,
     teamId
   ])
@@ -179,6 +203,7 @@ const useChatActions = () => {
     getAgents,
     focusChatInput,
     getTeams,
+    getSkills,
     initialize
   }
 }

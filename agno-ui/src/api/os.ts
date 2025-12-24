@@ -2,7 +2,13 @@ import { toast } from 'sonner'
 
 import { APIRoutes } from './routes'
 
-import { AgentDetails, Sessions, TeamDetails } from '@/types/os'
+import {
+  AgentDetails,
+  Sessions,
+  SkillMetadata,
+  SkillRouteResponse,
+  TeamDetails
+} from '@/types/os'
 
 // Helper function to create headers with optional auth token
 const createHeaders = (authToken?: string): HeadersInit => {
@@ -143,6 +149,92 @@ export const getTeamsAPI = async (
     return data
   } catch {
     toast.error('Error fetching  teams')
+    return []
+  }
+}
+
+export const getSkillsAPI = async (
+  endpoint: string,
+  authToken?: string
+): Promise<SkillMetadata[]> => {
+  const url = APIRoutes.GetSkills(endpoint)
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: createHeaders(authToken)
+    })
+
+    if (!response.ok) {
+      toast.error(`Failed to fetch skills: ${response.statusText}`)
+      return []
+    }
+
+    return (await response.json()) as SkillMetadata[]
+  } catch {
+    toast.error('Error fetching skills')
+    return []
+  }
+}
+
+export const routeSkillsAPI = async (
+  endpoint: string,
+  message: string,
+  authToken?: string,
+  signal?: AbortSignal
+): Promise<SkillMetadata[]> => {
+  if (!message.trim()) {
+    return []
+  }
+
+  try {
+    const response = await fetch(APIRoutes.RouteSkills(endpoint), {
+      method: 'POST',
+      headers: {
+        ...createHeaders(authToken)
+      },
+      body: JSON.stringify({ message }),
+      signal
+    })
+
+    if (!response.ok) {
+      toast.error(`Failed to route skills: ${response.statusText}`)
+      return []
+    }
+
+    const data = (await response.json()) as SkillRouteResponse
+    return data.skills
+  } catch {
+    toast.error('Error routing skills')
+    return []
+  }
+}
+
+export const reloadSkillsAPI = async (
+  endpoint: string,
+  authToken?: string
+): Promise<SkillMetadata[]> => {
+  try {
+    const response = await fetch(APIRoutes.ReloadSkills(endpoint), {
+      method: 'POST',
+      headers: createHeaders(authToken)
+    })
+
+    if (!response.ok) {
+      toast.error(`Failed to reload skills: ${response.statusText}`)
+      return []
+    }
+
+    const data = (await response.json()) as SkillRouteResponse & {
+      status?: string
+    }
+
+    if ('skills' in data) {
+      return data.skills
+    }
+
+    return []
+  } catch {
+    toast.error('Error reloading skills')
     return []
   }
 }

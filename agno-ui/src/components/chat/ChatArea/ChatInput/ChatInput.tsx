@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { TextArea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
@@ -7,6 +7,7 @@ import { useStore } from '@/store'
 import useAIChatStreamHandler from '@/hooks/useAIStreamHandler'
 import { useQueryState } from 'nuqs'
 import Icon from '@/components/ui/icon'
+import { routeSkillsAPI } from '@/api/os'
 
 const ChatInput = () => {
   const { chatInputRef } = useStore()
@@ -16,6 +17,65 @@ const ChatInput = () => {
   const [teamId] = useQueryState('team')
   const [inputMessage, setInputMessage] = useState('')
   const isStreaming = useStore((state) => state.isStreaming)
+  const isEndpointActive = useStore((state) => state.isEndpointActive)
+  const selectedEndpoint = useStore((state) => state.selectedEndpoint)
+  const authToken = useStore((state) => state.authToken)
+  const setRecommendedSkills = useStore((state) => state.setRecommendedSkills)
+  const setIsRoutingSkills = useStore((state) => state.setIsRoutingSkills)
+  const routeAbortController = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    if (!isEndpointActive || !selectedEndpoint) {
+      setRecommendedSkills([])
+      return
+    }
+
+    const message = inputMessage.trim()
+    if (!message) {
+      routeAbortController.current?.abort()
+      setIsRoutingSkills(false)
+      setRecommendedSkills([])
+      return
+    }
+
+    const debounceId = setTimeout(async () => {
+      routeAbortController.current?.abort()
+      const controller = new AbortController()
+      routeAbortController.current = controller
+      setIsRoutingSkills(true)
+      try {
+        const skills = await routeSkillsAPI(
+          selectedEndpoint,
+          message,
+          authToken,
+          controller.signal
+        )
+        setRecommendedSkills(skills)
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === 'AbortError')) {
+          toast.error(
+            `Error routing skills: ${error instanceof Error ? error.message : String(error)
+            }`
+          )
+          setRecommendedSkills([])
+        }
+      } finally {
+        setIsRoutingSkills(false)
+      }
+    }, 400)
+
+    return () => {
+      clearTimeout(debounceId)
+      routeAbortController.current?.abort()
+    }
+  }, [
+    inputMessage,
+    authToken,
+    isEndpointActive,
+    selectedEndpoint,
+    setIsRoutingSkills,
+    setRecommendedSkills
+  ])
   const handleSubmit = async () => {
     if (!inputMessage.trim()) return
 
@@ -24,10 +84,11 @@ const ChatInput = () => {
 
     try {
       await handleStreamResponse(currentMessage)
+      setRecommendedSkills([])
+      setIsRoutingSkills(false)
     } catch (error) {
       toast.error(
-        `Error in handleSubmit: ${
-          error instanceof Error ? error.message : String(error)
+        `Error in handleSubmit: ${error instanceof Error ? error.message : String(error)
         }`
       )
     }

@@ -1,0 +1,22 @@
+id: finance_research
+name: Market Research Skill
+description: Quantitative market analysis with live equity data and ratio computation.
+tags:
+  - finance
+  - markets
+  - analysis
+match_terms:
+  - stock
+  - stocks
+  - ticker
+  - price
+  - earnings
+  - valuation
+  - market cap
+  - pe ratio
+  - nvda
+  - aapl
+version: "1.0.0"
+instructions: SKILL.md
+tools_path: tools
+refs_path: refs

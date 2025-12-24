@@ -1,0 +1,17 @@
+id: web_search
+name: Web Search Skill
+description: Focused web intelligence gathering using DuckDuckGo queries.
+tags:
+  - search
+  - web
+  - discovery
+match_terms:
+  - search
+  - web
+  - latest
+  - news
+  - research
+version: "1.0.0"
+instructions: SKILL.md
+tools_path: tools
+refs_path: refs

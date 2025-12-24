@@ -6,6 +6,10 @@ from agno.os import AgentOS
 
 from agents.agno_assist import agno_assist
 from agents.web_agent import web_agent
+from app.api.health import router as health_router
+from app.api.memory import router as memory_router
+from app.api.references import router as references_router
+from app.api.skills import router as skills_router
 from teams.multilingual_team import multilingual_team
 from teams.reasoning_finance_team import reasoning_research_team
 from workflows.investment_workflow import investment_workflow
@@ -23,6 +27,12 @@ agent_os = AgentOS(
     config=os_config_path,
 )
 app = agent_os.get_app()
+
+# Include custom API routers for advanced features
+app.include_router(health_router)
+app.include_router(skills_router)
+app.include_router(memory_router)
+app.include_router(references_router)
 
 if __name__ == "__main__":
     # Serve the application

@@ -13,6 +13,7 @@ A modern chat interface for AgentOS built with Next.js, Tailwind CSS, and TypeSc
 - 📚 **References Support**: Show sources used by the agent
 - 🖼️ **Multi-modality Support**: Handles various content types including images, video, and audio
 - 🎨 **Customizable UI**: Built with Tailwind CSS for easy styling
+- 🗂️ **Skill Catalog & Routing**: Browse available skills, refresh catalogs, and preview suggested skills while composing messages
 - 🧰 **Built with Modern Stack**: Next.js, TypeScript, shadcn/ui, Framer Motion, and more
 
 ## Version Support
@@ -112,6 +113,12 @@ Once you've configured the endpoint:
 1. The Agent UI will automatically attempt to connect to your AgentOS
 2. If successful, you'll see your agents available in the chat interface
 3. If there are connection issues, check that your AgentOS is running and accessible. Check out the troubleshooting guide [here](https://docs.agno.com/faq/agentos-connection)
+
+## Skill-Aware Experience
+
+- Use the **Skills** section in the sidebar to search the live catalog, refresh the metadata from AgentOS, and review tags or descriptions before invoking a workflow.
+- While drafting a message, the chat surface shows **Suggested Skills** that match your intent. Suggestions update automatically after a short pause and reset once the request is sent.
+- Enable dynamic routing by keeping your endpoint online; the UI gracefully falls back when a catalog is unavailable, ensuring clarity about current capabilities.
 
 ## Contributing
 

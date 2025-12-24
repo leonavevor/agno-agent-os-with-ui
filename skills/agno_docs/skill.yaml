@@ -1,0 +1,17 @@
+id: agno_docs
+name: Agno Documentation Skill
+description: Guides developers through Agno's AgentOS with contextual knowledge search and implementation support.
+tags:
+  - agno
+  - documentation
+  - onboarding
+match_terms:
+  - agno
+  - agentos
+  - docs
+  - tutorial
+  - framework
+version: "1.0.0"
+instructions: SKILL.md
+tools_path: tools
+refs_path: refs

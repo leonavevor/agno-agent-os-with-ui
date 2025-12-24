@@ -5,7 +5,8 @@ import {
   AgentDetails,
   SessionEntry,
   TeamDetails,
-  type ChatMessage
+  type ChatMessage,
+  type SkillMetadata
 } from '@/types/os'
 
 interface Store {
@@ -54,6 +55,16 @@ interface Store {
   ) => void
   isSessionsLoading: boolean
   setIsSessionsLoading: (isSessionsLoading: boolean) => void
+  skills: SkillMetadata[]
+  setSkills: (skills: SkillMetadata[]) => void
+  isSkillsLoading: boolean
+  setIsSkillsLoading: (isLoading: boolean) => void
+  skillSearchQuery: string
+  setSkillSearchQuery: (query: string) => void
+  recommendedSkills: SkillMetadata[]
+  setRecommendedSkills: (skills: SkillMetadata[]) => void
+  isRoutingSkills: boolean
+  setIsRoutingSkills: (isRouting: boolean) => void
 }
 
 export const useStore = create<Store>()(
@@ -104,7 +115,20 @@ export const useStore = create<Store>()(
         })),
       isSessionsLoading: false,
       setIsSessionsLoading: (isSessionsLoading) =>
-        set(() => ({ isSessionsLoading }))
+        set(() => ({ isSessionsLoading })),
+      skills: [],
+      setSkills: (skills) => set(() => ({ skills })),
+      isSkillsLoading: false,
+      setIsSkillsLoading: (isLoading) =>
+        set(() => ({ isSkillsLoading: isLoading })),
+      skillSearchQuery: '',
+      setSkillSearchQuery: (query) => set(() => ({ skillSearchQuery: query })),
+      recommendedSkills: [],
+      setRecommendedSkills: (skills) =>
+        set(() => ({ recommendedSkills: skills })),
+      isRoutingSkills: false,
+      setIsRoutingSkills: (isRouting) =>
+        set(() => ({ isRoutingSkills: isRouting }))
     }),
     {
       name: 'endpoint-storage',

@@ -1,0 +1,34 @@
+# Declarative mapping between agents and the skills they should load.
+# Extra instructions are merged after shared prompts and skill manuals.
+agents:
+  web-search-agent:
+    skills:
+      default:
+        - web_search
+      auto:
+        enabled: true
+        limit: 2
+        tags:
+          - search
+          - web
+          - finance
+        additional: []
+    extra_instructions: |
+      Operate under the codename WebX. Maintain a professional tone while keeping the
+      response structure skimmable for busy stakeholders.
+  agno-assist:
+    skills:
+      default:
+        - agno_docs
+      auto:
+        enabled: true
+        limit: 2
+        tags:
+          - search
+          - docs
+        min_score: 0.5
+        additional: []
+    extra_instructions: |
+      Prioritize authoritative references from the Agno knowledge base. When web
+      sources diverge from official guidance, call out the discrepancy and default
+      to the documented behavior.

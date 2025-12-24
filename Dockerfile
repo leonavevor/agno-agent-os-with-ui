@@ -9,14 +9,17 @@ ENV PYTHONUNBUFFERED=1 \
     UV_CACHE_DIR=/tmp/uv-cache \
     UV_HTTP_TIMEOUT=120
 
-# Create non-root user
-ARG USER=app
-ARG UID=61000
-ARG GID=61000
+# Create non-root user 'agno'
+ARG USER=agno
+ARG UID=1000
+ARG GID=1000
 ARG APP_DIR=/app
 
 RUN groupadd -g ${GID} ${USER} \
-    && useradd -g ${GID} -u ${UID} -ms /bin/bash -d ${APP_DIR} ${USER}
+    && useradd -g ${GID} -u ${UID} -ms /bin/bash -d ${APP_DIR} ${USER} \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
 
 # Development stage for dependencies
 FROM base AS deps
@@ -42,9 +45,10 @@ COPY --from=deps /usr/local/bin /usr/local/bin
 # Copy application code
 COPY --chown=${USER}:${USER} . .
 
-# Create necessary directories and set permissions
+# Create necessary directories and set permissions (must be done as root before USER switch)
 RUN mkdir -p /tmp/uv-cache /var/log/app \
-    && chown -R ${USER}:${USER} ${APP_DIR} /tmp/uv-cache /var/log/app
+    && chown -R ${USER}:${USER} ${APP_DIR} /tmp/uv-cache /var/log/app \
+    && find ${APP_DIR}/scripts -name "*.sh" -exec chmod +x {} \;
 
 # Switch to non-root user
 USER ${USER}

@@ -10,39 +10,73 @@ services:
       POSTGRES_USER: ${DB_USER:-ai}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-ai}
       POSTGRES_DB: ${DB_NAME:-ai}
+      POSTGRES_HOST_AUTH_METHOD: md5
     networks:
       - agent-os
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-ai} -d ${DB_NAME:-ai}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   agno-backend-api:
     build:
       context: .
       dockerfile: Dockerfile
     image: ${IMAGE_NAME:-agent-os}:${IMAGE_TAG:-latest}
-    command: uvicorn app.main:app --host 0.0.0.0 --port 7777 --reload
+    command: app
     restart: unless-stopped
     ports:
-      - "7777:7777"
+      - "7777:8000"
+    working_dir: /app
     volumes:
       - .:/app
     environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      # Database
       DB_HOST: pgvector
       DB_PORT: 5432
       DB_USER: ${DB_USER:-ai}
       DB_PASS: ${DB_PASSWORD:-ai}
       DB_DATABASE: ${DB_NAME:-ai}
+      
+      # API Keys
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      
+      # App Configuration
+      PORT: 8000
       WAIT_FOR_DB: "True"
-      PRINT_ENV_ON_LOAD: "True"
+      INIT_DB: "True"
+      PRINT_ENV_ON_LOAD: "False"
+      
+      # Feature Flags
+      ENABLE_MEMORY: ${ENABLE_MEMORY:-True}
+      ENABLE_VECTOR_RAG: ${ENABLE_VECTOR_RAG:-True}
+      ENABLE_VALIDATION: ${ENABLE_VALIDATION:-True}
+      
+      # Performance Tuning
+      WORKERS: ${WORKERS:-1}
+      UVICORN_RELOAD: ${UVICORN_RELOAD:-True}
     networks:
       - agent-os
     depends_on:
-      - pgvector
+      pgvector:
+        condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # agno-ui-orig:
   #   image: node:25-bookworm-slim
-  #   command: ["bash", "-c", "npx create-agent-ui@latest && cd agent-ui && npm install && npm run dev"]
+  #   command: ["bash", "-c", "npx create-agent-ui@latest && npm install && npm run dev"]
+  #   working_dir: /agno-ui
   #   volumes:
   #     - ./agno-ui:/agno-ui
   #   restart: unless-stopped
@@ -59,22 +93,43 @@ services:
 
   agno-ui-custom:
     image: node:25-bookworm-slim
+    working_dir: /agno-ui
     volumes:
       - ./agno-ui:/agno-ui
+      - /agno-ui/node_modules
     restart: unless-stopped
-    command: ["bash", "-c", "cd /agno-ui && npm install && npm run dev"]
+    command: ["bash", "-c", "npm install && npm run dev"]
     ports:
       - "3000:3000"
     environment:
-      REACT_APP_API_URL: http://host.docker.internal:7777
-      OPENAI_MODEL_ID: gpt-5-mini
-      OPENAI_EMBEDDER_MODEL_ID: text-embedding-3-small
-      ANTHROPIC_MODEL_ID: claude-sonnet-4-5
-      GOOGLE_MODEL_ID: gemini-2.5-pro
+      # Backend API URL
+      NEXT_PUBLIC_API_URL: http://localhost:7777
+      
+      # Model Configuration
+      OPENAI_MODEL_ID: ${OPENAI_MODEL_ID:-gpt-4}
+      OPENAI_EMBEDDER_MODEL_ID: ${OPENAI_EMBEDDER_MODEL_ID:-text-embedding-3-small}
+      ANTHROPIC_MODEL_ID: ${ANTHROPIC_MODEL_ID:-claude-sonnet-4}
+      GOOGLE_MODEL_ID: ${GOOGLE_MODEL_ID:-gemini-2.0-flash-exp}
+      
+      # Feature Flags
+      NEXT_PUBLIC_ENABLE_MEMORY: ${ENABLE_MEMORY:-true}
+      NEXT_PUBLIC_ENABLE_VECTOR_RAG: ${ENABLE_VECTOR_RAG:-true}
+      NEXT_PUBLIC_ENABLE_SKILLS: ${ENABLE_SKILLS:-true}
+      
+      # Development
+      NODE_ENV: development
+      WATCHPACK_POLLING: true
     networks:
       - agent-os
     depends_on:
-      - agno-backend-api
+      agno-backend-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 
 networks:

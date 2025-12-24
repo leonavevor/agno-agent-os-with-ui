@@ -15,6 +15,8 @@ import { toast } from 'sonner'
 import { useQueryState } from 'nuqs'
 import { truncateText } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
+import SkillCatalog from './SkillCatalog'
+import MemorySettings from './MemorySettings'
 
 const ENDPOINT_PLACEHOLDER = 'NO ENDPOINT ADDED'
 const SidebarHeader = () => (
@@ -171,7 +173,7 @@ const Endpoint = () => {
                   <p className="text-xs font-medium text-muted">
                     {isMounted
                       ? truncateText(selectedEndpoint, 21) ||
-                        ENDPOINT_PLACEHOLDER
+                      ENDPOINT_PLACEHOLDER
                       : 'http://localhost:7777'}
                   </p>
                   <div
@@ -302,6 +304,10 @@ const Sidebar = ({
                     </>
                   )}
                 </motion.div>
+                <SkillCatalog />
+                {process.env.NEXT_PUBLIC_ENABLE_MEMORY === 'true' && (
+                  <MemorySettings />
+                )}
                 <Sessions />
               </>
             )}
