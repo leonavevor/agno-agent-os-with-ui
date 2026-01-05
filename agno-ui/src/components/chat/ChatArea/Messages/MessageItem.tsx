@@ -7,6 +7,7 @@ import Images from './Multimedia/Images'
 import Audios from './Multimedia/Audios'
 import { memo } from 'react'
 import AgentThinkingLoader from './AgentThinkingLoader'
+import { MessageAudioButton } from '@/components/chat/MessageAudioButton'
 
 interface MessageProps {
   message: ChatMessage
@@ -73,7 +74,17 @@ const AgentMessage = ({ message }: MessageProps) => {
       <div className="flex-shrink-0">
         <Icon type="agent" size="sm" />
       </div>
-      {messageContent}
+      <div className="flex-1">
+        {messageContent}
+      </div>
+      {message.content && !message.streamingError && (
+        <div className="flex-shrink-0">
+          <MessageAudioButton
+            text={message.content}
+            messageId={`${message.role}-${message.created_at}`}
+          />
+        </div>
+      )}
     </div>
   )
 }

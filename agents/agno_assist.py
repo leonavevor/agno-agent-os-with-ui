@@ -2,11 +2,9 @@ from textwrap import dedent
 
 from agno.agent import Agent
 from agno.knowledge import Knowledge
-from agno.knowledge.embedder.openai import OpenAIEmbedder
-from agno.models.openai import OpenAIChat
 from agno.vectordb.pgvector import PgVector, SearchType
 
-from app.models import OPENAI_EMBEDDER_MODEL_ID, OPENAI_MODEL_ID
+from app.models_builder import build_chat_model, build_embedder
 from db.session import db_url, get_postgres_db
 from core import skill_orchestrator
 
@@ -15,7 +13,7 @@ _context = skill_orchestrator.build_for_agent("agno-assist")
 agno_assist = Agent(
     id="agno-assist",
     name="Agno Assist",
-    model=OpenAIChat(id=OPENAI_MODEL_ID),
+    model=build_chat_model(),
     # Tools available to the agent
     tools=_context.tools,
     # Description of the agent
@@ -36,7 +34,7 @@ agno_assist = Agent(
             db_url=db_url,
             table_name="agno_assist_knowledge",
             search_type=SearchType.hybrid,
-            embedder=OpenAIEmbedder(id=OPENAI_EMBEDDER_MODEL_ID),
+            embedder=build_embedder(),
         ),
     ),
     # Give the agent a tool to search the knowledge base (this is True by default but set here for clarity)

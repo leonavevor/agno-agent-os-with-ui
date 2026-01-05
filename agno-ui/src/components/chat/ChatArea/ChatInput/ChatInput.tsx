@@ -8,6 +8,7 @@ import useAIChatStreamHandler from '@/hooks/useAIStreamHandler'
 import { useQueryState } from 'nuqs'
 import Icon from '@/components/ui/icon'
 import { routeSkillsAPI } from '@/api/os'
+import { VoiceInputButton } from '@/components/chat/VoiceInputButton'
 
 const ChatInput = () => {
   const { chatInputRef } = useStore()
@@ -94,6 +95,11 @@ const ChatInput = () => {
     }
   }
 
+  const handleTranscription = (text: string) => {
+    // Append transcription to current input
+    setInputMessage((prev) => (prev ? `${prev} ${text}` : text))
+  }
+
   return (
     <div className="relative mx-auto mb-1 flex w-full max-w-2xl items-end justify-center gap-x-2 font-geist">
       <TextArea
@@ -114,6 +120,10 @@ const ChatInput = () => {
         className="w-full border border-accent bg-primaryAccent px-4 text-sm text-primary focus:border-accent"
         disabled={!(selectedAgent || teamId)}
         ref={chatInputRef}
+      />
+      <VoiceInputButton
+        onTranscription={handleTranscription}
+        disabled={!(selectedAgent || teamId) || isStreaming}
       />
       <Button
         onClick={handleSubmit}

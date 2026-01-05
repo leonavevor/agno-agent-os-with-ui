@@ -24,6 +24,9 @@ import { ModelSelector } from '@/components/ModelSelector'
 import { SkillsModal } from '@/components/SkillsModal'
 import { ProjectModal } from '@/components/ProjectModal'
 import { MetricsModal } from '@/components/MetricsModal'
+import { MCPServersModal } from '@/components/MCPServersModal'
+import { ToolsModal } from '@/components/ToolsModal'
+import { AudioSettingsModal } from '@/components/audio'
 
 const ENDPOINT_PLACEHOLDER = 'NO ENDPOINT ADDED'
 const SidebarHeader = () => (
@@ -221,6 +224,9 @@ const Sidebar = ({
   const [skillsModalOpen, setSkillsModalOpen] = useState(false)
   const [projectModalOpen, setProjectModalOpen] = useState(false)
   const [metricsModalOpen, setMetricsModalOpen] = useState(false)
+  const [mcpServersModalOpen, setMcpServersModalOpen] = useState(false)
+  const [toolsModalOpen, setToolsModalOpen] = useState(false)
+  const [audioSettingsModalOpen, setAudioSettingsModalOpen] = useState(false)
   const { clearChat, focusChatInput, initialize } = useChatActions()
   const {
     messages,
@@ -229,7 +235,8 @@ const Sidebar = ({
     selectedModel,
     hydrated,
     isEndpointLoading,
-    mode
+    mode,
+    authToken
   } = useStore()
   const [isMounted, setIsMounted] = useState(false)
   const [agentId] = useQueryState('agent')
@@ -290,14 +297,6 @@ const Sidebar = ({
               <Icon type="folder" size="xs" />
               <span className="ml-2">New Project</span>
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => setSkillsModalOpen(true)}
-              className="h-9 w-full rounded-xl border-primary/10 bg-accent/30 text-xs font-medium uppercase text-muted-foreground hover:bg-accent/50 hover:text-primary/90 transition-colors"
-            >
-              <Icon type="tool" size="xs" />
-              <span className="ml-2">Skills</span>
-            </Button>
           </div>
           <div className="border-t border-primary/10" />
           {isMounted && (
@@ -345,14 +344,61 @@ const Sidebar = ({
                     <Sessions />
                   </SidebarSection>
                   <SidebarSection title="Misc" defaultOpen={false}>
-                    <Button
-                      variant="outline"
-                      onClick={() => setMetricsModalOpen(true)}
-                      className="h-9 w-full rounded-xl bg-accent/30 text-xs font-medium uppercase text-muted-foreground hover:bg-accent/50 hover:text-primary/90 transition-colors border-0"
-                    >
-                      <Icon type="database" size="xs" />
-                      <span className="ml-2">Metrics</span>
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setMcpServersModalOpen(true)}
+                        className="h-9 w-full rounded-xl bg-accent/30 text-xs font-medium uppercase text-muted-foreground hover:bg-accent/50 hover:text-primary/90 transition-colors border-0 justify-start"
+                      >
+                        <Icon type="database" size="xs" />
+                        <span className="ml-2">MCP Servers</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setSkillsModalOpen(true)}
+                        className="h-9 w-full rounded-xl bg-accent/30 text-xs font-medium uppercase text-muted-foreground hover:bg-accent/50 hover:text-primary/90 transition-colors border-0 justify-start"
+                      >
+                        <Icon type="tool" size="xs" />
+                        <span className="ml-2">Skills</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setToolsModalOpen(true)}
+                        className="h-9 w-full rounded-xl bg-accent/30 text-xs font-medium uppercase text-muted-foreground hover:bg-accent/50 hover:text-primary/90 transition-colors border-0 justify-start"
+                      >
+                        <Icon type="hammer" size="xs" />
+                        <span className="ml-2">Tools</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setAudioSettingsModalOpen(true)}
+                        className="h-9 w-full rounded-xl bg-accent/30 text-xs font-medium uppercase text-muted-foreground hover:bg-accent/50 hover:text-primary/90 transition-colors border-0 justify-start gap-2"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-4 w-4"
+                        >
+                          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                          <line x1="12" x2="12" y1="19" y2="22" />
+                        </svg>
+                        <span>Audio Settings</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setMetricsModalOpen(true)}
+                        className="h-9 w-full rounded-xl bg-accent/30 text-xs font-medium uppercase text-muted-foreground hover:bg-accent/50 hover:text-primary/90 transition-colors border-0 justify-start"
+                      >
+                        <Icon type="database" size="xs" />
+                        <span className="ml-2">Metrics</span>
+                      </Button>
+                    </div>
                   </SidebarSection>
                 </>
               )}
@@ -369,6 +415,14 @@ const Sidebar = ({
         open={metricsModalOpen}
         onOpenChange={setMetricsModalOpen}
         apiUrl={selectedEndpoint}
+      />
+      <MCPServersModal open={mcpServersModalOpen} onOpenChange={setMcpServersModalOpen} />
+      <ToolsModal open={toolsModalOpen} onOpenChange={setToolsModalOpen} />
+      <AudioSettingsModal
+        isOpen={audioSettingsModalOpen}
+        onClose={() => setAudioSettingsModalOpen(false)}
+        agentOSUrl={selectedEndpoint}
+        authToken={authToken}
       />
     </motion.aside>
   )

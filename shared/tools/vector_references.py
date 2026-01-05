@@ -97,9 +97,9 @@ class VectorReferenceStore:
         Returns:
             Number of new chunks indexed
         """
-        from agno.embedder.openai import OpenAIEmbedder
+        from app.models_builder import build_embedder
 
-        embedder = OpenAIEmbedder(model=self.embedding_model)
+        embedder = build_embedder()
         new_chunks = 0
 
         with self.SessionLocal() as session:
@@ -172,9 +172,9 @@ class VectorReferenceStore:
         Returns:
             List of matched documents with similarity scores
         """
-        from agno.embedder.openai import OpenAIEmbedder
+        from app.models_builder import build_embedder
 
-        embedder = OpenAIEmbedder(model=self.embedding_model)
+        embedder = build_embedder()
         query_embedding = embedder.get_embedding(query).data[0].embedding
 
         with self.SessionLocal() as session:

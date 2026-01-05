@@ -4,11 +4,20 @@ Provides endpoints for managing LLM models and providers via LiteLLM proxy.
 Supports multiple providers: OpenAI, Anthropic, Azure, Google, etc.
 """
 
-import os
-from typing import Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
+
+from app.config.litellm_manager import (
+    get_default_chat_configuration,
+    get_default_embedding_configuration,
+    get_embedding_catalog,
+    get_model_catalog,
+    get_provider_config as load_provider_config,
+    get_provider_configs as load_provider_configs,
+    update_provider_config as persist_provider_config,
+)
 
 router = APIRouter(prefix="/models", tags=["models"])
 
@@ -41,6 +50,20 @@ class ModelInfo(BaseModel):
     )
 
 
+class EmbeddingInfo(BaseModel):
+    """Information about an available embedding model"""
+
+    id: str = Field(..., description="Model ID (e.g., 'text-embedding-3-small')")
+    name: str = Field(..., description="Human-readable model name")
+    provider: str = Field(
+        ..., description="Provider name (e.g., 'openai', 'huggingface')"
+    )
+    dimensions: int = Field(..., description="Embedding dimensions")
+    description: Optional[str] = Field(
+        None, description="Model description or capabilities"
+    )
+
+
 class ModelProvider(BaseModel):
     """Information about a model provider"""
 
@@ -48,6 +71,16 @@ class ModelProvider(BaseModel):
     name: str = Field(..., description="Provider display name")
     models: List[ModelInfo] = Field(
         ..., description="Available models from this provider"
+    )
+
+
+class EmbeddingProvider(BaseModel):
+    """Information about an embedding provider"""
+
+    id: str = Field(..., description="Provider ID")
+    name: str = Field(..., description="Provider display name")
+    embeddings: List[EmbeddingInfo] = Field(
+        ..., description="Available embedding models from this provider"
     )
 
 
@@ -74,6 +107,9 @@ class ProviderConfig(BaseModel):
     provider_id: str = Field(..., description="Provider ID")
     api_key: Optional[str] = Field(None, description="API key for the provider")
     base_url: Optional[str] = Field(None, description="Base URL for the provider")
+    api_version: Optional[str] = Field(
+        None, description="API version identifier (e.g., Azure api-version)"
+    )
     enabled: bool = Field(default=True, description="Whether provider is enabled")
 
 
@@ -82,7 +118,18 @@ class ProviderConfigUpdate(BaseModel):
 
     api_key: Optional[str] = Field(None, description="API key for the provider")
     base_url: Optional[str] = Field(None, description="Base URL for the provider")
+    api_version: Optional[str] = Field(
+        None, description="API version identifier (e.g., Azure api-version)"
+    )
     enabled: Optional[bool] = Field(None, description="Whether provider is enabled")
+
+
+def _mask_api_key(api_key: Optional[str]) -> Optional[str]:
+    if not api_key:
+        return None
+    if len(api_key) <= 12:
+        return "***"
+    return f"{api_key[:8]}...{api_key[-4:]}"
 
 
 class ModelSettings(BaseModel):
@@ -164,226 +211,63 @@ class DefaultModelConfig(BaseModel):
     )
 
 
-# In-memory model registry (in production, this would come from LiteLLM or database)
-MODEL_REGISTRY: Dict[str, List[ModelInfo]] = {
-    "openai": [
-        ModelInfo(
-            id="gpt-5-mini",
-            name="GPT-5 Mini",
-            provider="openai",
-            description="Fast and efficient model for most tasks",
-            context_window=128000,
-            supports_streaming=True,
-            supports_tools=True,
-            supports_vision=True,
-        ),
-        ModelInfo(
-            id="gpt-4o",
-            name="GPT-4o",
-            provider="openai",
-            description="Most capable OpenAI model",
-            context_window=128000,
-            supports_streaming=True,
-            supports_tools=True,
-            supports_vision=True,
-        ),
-        ModelInfo(
-            id="gpt-4o-mini",
-            name="GPT-4o Mini",
-            provider="openai",
-            description="Fast, affordable model for simple tasks",
-            context_window=128000,
-            supports_streaming=True,
-            supports_tools=True,
-            supports_vision=True,
-        ),
-        ModelInfo(
-            id="o1-pro",
-            name="O1 Pro",
-            provider="openai",
-            description="Advanced reasoning model",
-            context_window=200000,
-            supports_streaming=True,
-            supports_tools=False,
-            is_reasoning=True,
-        ),
-    ],
-    "anthropic": [
-        ModelInfo(
-            id="claude-sonnet-4-5",
-            name="Claude Sonnet 4.5",
-            provider="anthropic",
-            description="Anthropic's most intelligent model",
-            context_window=200000,
-            supports_streaming=True,
-            supports_tools=True,
-            supports_vision=True,
-        ),
-        ModelInfo(
-            id="claude-3-opus-20240229",
-            name="Claude 3 Opus",
-            provider="anthropic",
-            description="Most powerful Claude 3 model",
-            context_window=200000,
-            supports_streaming=True,
-            supports_tools=True,
-            supports_vision=True,
-        ),
-        ModelInfo(
-            id="claude-3-sonnet-20240229",
-            name="Claude 3 Sonnet",
-            provider="anthropic",
-            description="Balanced performance and speed",
-            context_window=200000,
-            supports_streaming=True,
-            supports_tools=True,
-            supports_vision=True,
-        ),
-    ],
-    "google": [
-        ModelInfo(
-            id="gemini-2.5-pro",
-            name="Gemini 2.5 Pro",
-            provider="google",
-            description="Google's most advanced model",
-            context_window=2097152,
-            supports_streaming=True,
-            supports_tools=True,
-            supports_vision=True,
-        ),
-        ModelInfo(
-            id="gemini-2.0-flash-exp",
-            name="Gemini 2.0 Flash",
-            provider="google",
-            description="Fast, efficient Google model",
-            context_window=1048576,
-            supports_streaming=True,
-            supports_tools=True,
-            supports_vision=True,
-        ),
-    ],
-    "azure": [
-        ModelInfo(
-            id="azure/gpt-4o",
-            name="Azure GPT-4o",
-            provider="azure",
-            description="GPT-4o via Azure OpenAI",
-            context_window=128000,
-            supports_streaming=True,
-            supports_tools=True,
-            supports_vision=True,
-        ),
-        ModelInfo(
-            id="azure/gpt-35-turbo",
-            name="Azure GPT-3.5 Turbo",
-            provider="azure",
-            description="Affordable Azure model",
-            context_window=16000,
-            supports_streaming=True,
-            supports_tools=True,
-        ),
-    ],
-    "deepseek": [
-        ModelInfo(
-            id="deepseek/deepseek-chat",
-            name="DeepSeek Chat",
-            provider="deepseek",
-            description="DeepSeek's chat model",
-            context_window=64000,
-            supports_streaming=True,
-            supports_tools=True,
-        ),
-        ModelInfo(
-            id="deepseek/deepseek-reasoner",
-            name="DeepSeek R1",
-            provider="deepseek",
-            description="Advanced reasoning model",
-            context_window=64000,
-            supports_streaming=True,
-            supports_tools=False,
-            is_reasoning=True,
-        ),
-    ],
-    "ollama": [
-        ModelInfo(
-            id="ollama/llama3.2",
-            name="Llama 3.2 (Local)",
-            provider="ollama",
-            description="Run locally via Ollama",
-            context_window=128000,
-            supports_streaming=True,
-            supports_tools=True,
-        ),
-        ModelInfo(
-            id="ollama/mistral",
-            name="Mistral (Local)",
-            provider="ollama",
-            description="Run locally via Ollama",
-            context_window=32000,
-            supports_streaming=True,
-            supports_tools=True,
-        ),
-    ],
-}
+def _build_model_registry() -> Dict[str, List[ModelInfo]]:
+    catalog = get_model_catalog()
+    registry: Dict[str, List[ModelInfo]] = {}
+
+    for provider_id, entries in catalog.items():
+        models: List[ModelInfo] = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            try:
+                models.append(ModelInfo(**entry))
+            except ValidationError:
+                continue
+        registry[provider_id] = models
+
+    return registry
+
+
+def _build_embedding_registry() -> Dict[str, List[EmbeddingInfo]]:
+    catalog = get_embedding_catalog()
+    registry: Dict[str, List[EmbeddingInfo]] = {}
+
+    for provider_id, entries in catalog.items():
+        embeddings: List[EmbeddingInfo] = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            try:
+                embeddings.append(EmbeddingInfo(**entry))
+            except ValidationError:
+                continue
+        registry[provider_id] = embeddings
+
+    return registry
 
 
 # Global state for current model (in production, use database or session storage)
+_default_chat = get_default_chat_configuration()
+_default_model_id = _default_chat.get("model_id", "gpt-5-mini")
+_default_provider = _default_chat.get("provider", "openai")
+
 CURRENT_MODEL = {
-    "model_id": "gpt-5-mini",
-    "provider": "openai",
+    "model_id": _default_model_id,
+    "provider": _default_provider,
 }
 
 # Global default model configuration
 DEFAULT_MODEL_CONFIG: Optional[ModelConfiguration] = ModelConfiguration(
-    model_id="gpt-5-mini",
-    provider="openai",
-    settings=ModelSettings(
-        temperature=0.7,
-        max_tokens=4096,
-        stream=True,
-    ),
-    enabled=True,
+    model_id=_default_model_id,
+    provider=_default_provider,
+    settings=ModelSettings(**_default_chat.get("settings", {})),
+    enabled=_default_chat.get("enabled", True),
 )
 
 # Hierarchical configurations: project -> team -> agent
 # Key format: "entity_type:entity_id" (e.g., "project:my-project", "agent:agno-assist")
 ENTITY_MODEL_CONFIGS: Dict[str, EntityModelConfig] = {}
-
-# Provider configurations with base URLs and API keys
-PROVIDER_CONFIGS: Dict[str, Dict[str, Optional[str]]] = {
-    "openai": {
-        "api_key": os.getenv("OPENAI_API_KEY"),
-        "base_url": os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
-        "enabled": bool(os.getenv("OPENAI_API_KEY")),
-    },
-    "anthropic": {
-        "api_key": os.getenv("ANTHROPIC_API_KEY"),
-        "base_url": os.getenv("ANTHROPIC_BASE_URL", "https://api.anthropic.com"),
-        "enabled": bool(os.getenv("ANTHROPIC_API_KEY")),
-    },
-    "google": {
-        "api_key": os.getenv("GOOGLE_API_KEY"),
-        "base_url": os.getenv(
-            "GOOGLE_BASE_URL", "https://generativelanguage.googleapis.com"
-        ),
-        "enabled": bool(os.getenv("GOOGLE_API_KEY")),
-    },
-    "azure": {
-        "api_key": os.getenv("AZURE_API_KEY"),
-        "base_url": os.getenv("AZURE_API_BASE"),
-        "enabled": bool(os.getenv("AZURE_API_KEY")),
-    },
-    "deepseek": {
-        "api_key": os.getenv("DEEPSEEK_API_KEY"),
-        "base_url": os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
-        "enabled": bool(os.getenv("DEEPSEEK_API_KEY")),
-    },
-    "ollama": {
-        "api_key": None,  # Ollama doesn't require API key
-        "base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
-        "enabled": True,  # Ollama is local, always enabled
-    },
-}
 
 
 @router.get("/list", response_model=List[ModelProvider])
@@ -393,18 +277,19 @@ async def list_models() -> List[ModelProvider]:
 
     Returns a list of providers with their available models.
     """
-    providers = []
-    for provider_id, models in MODEL_REGISTRY.items():
-        # Get provider display name
-        provider_name_map = {
-            "openai": "OpenAI",
-            "anthropic": "Anthropic",
-            "google": "Google",
-            "azure": "Azure OpenAI",
-            "deepseek": "DeepSeek",
-            "ollama": "Ollama (Local)",
-        }
+    provider_name_map = {
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "google": "Google",
+        "azure": "Azure OpenAI",
+        "deepseek": "DeepSeek",
+        "ollama": "Ollama (Local)",
+    }
 
+    providers: List[ModelProvider] = []
+    registry = _build_model_registry()
+
+    for provider_id, models in registry.items():
         providers.append(
             ModelProvider(
                 id=provider_id,
@@ -414,6 +299,51 @@ async def list_models() -> List[ModelProvider]:
         )
 
     return providers
+
+
+@router.get("/embeddings/list", response_model=List[EmbeddingProvider])
+async def list_embeddings() -> List[EmbeddingProvider]:
+    """
+    List all available embedding models grouped by provider.
+
+    Returns a list of providers with their available embedding models.
+    """
+    provider_name_map = {
+        "openai": "OpenAI",
+        "huggingface": "HuggingFace (Local)",
+        "anthropic": "Anthropic",
+        "cohere": "Cohere",
+        "azure": "Azure OpenAI",
+    }
+
+    providers: List[EmbeddingProvider] = []
+    registry = _build_embedding_registry()
+
+    for provider_id, embeddings in registry.items():
+        providers.append(
+            EmbeddingProvider(
+                id=provider_id,
+                name=provider_name_map.get(provider_id, provider_id.capitalize()),
+                embeddings=embeddings,
+            )
+        )
+
+    return providers
+
+
+@router.get("/embeddings/default")
+async def get_default_embedding():
+    """
+    Get the default embedding configuration.
+
+    Returns the currently configured default embedding model and settings.
+    """
+    config = get_default_embedding_configuration()
+    return {
+        "provider": config.get("provider"),
+        "model_id": config.get("model_id"),
+        "dimensions": config.get("dimensions"),
+    }
 
 
 @router.get("/current", response_model=CurrentModelResponse)
@@ -428,11 +358,11 @@ async def get_current_model() -> CurrentModelResponse:
 
     # Find model info
     model_info = None
-    if current_provider in MODEL_REGISTRY:
-        for model in MODEL_REGISTRY[current_provider]:
-            if model.id == current_model_id:
-                model_info = model
-                break
+    registry = _build_model_registry()
+    for model in registry.get(current_provider, []):
+        if model.id == current_model_id:
+            model_info = model
+            break
 
     return CurrentModelResponse(
         model_id=current_model_id,
@@ -462,8 +392,10 @@ async def select_model(
     model_id = request.model_id
     provider = request.provider
 
+    registry = _build_model_registry()
+
     # Validate that the model exists
-    if provider not in MODEL_REGISTRY:
+    if provider not in registry:
         raise HTTPException(
             status_code=404,
             detail=f"Provider '{provider}' not found in registry",
@@ -471,7 +403,7 @@ async def select_model(
 
     model_found = False
     model_info = None
-    for model in MODEL_REGISTRY[provider]:
+    for model in registry.get(provider, []):
         if model.id == model_id:
             model_found = True
             model_info = model
@@ -508,7 +440,7 @@ async def list_providers() -> List[str]:
 
     Returns a simple list of provider identifiers.
     """
-    return list(MODEL_REGISTRY.keys())
+    return list(_build_model_registry().keys())
 
 
 @router.get("/providers/config", response_model=List[ProviderConfig])
@@ -518,25 +450,21 @@ async def get_provider_configs() -> List[ProviderConfig]:
 
     Returns masked API keys for security (only shows first 8 and last 4 chars).
     """
-    configs = []
-    for provider_id, config in PROVIDER_CONFIGS.items():
-        api_key = config.get("api_key")
-        # Mask API key for security
-        masked_key = None
-        if api_key and len(api_key) > 12:
-            masked_key = f"{api_key[:8]}...{api_key[-4:]}"
-        elif api_key:
-            masked_key = "***"
+    resolved = load_provider_configs()
+    provider_configs: List[ProviderConfig] = []
 
-        configs.append(
+    for provider_id, config in resolved.items():
+        provider_configs.append(
             ProviderConfig(
                 provider_id=provider_id,
-                api_key=masked_key,
+                api_key=_mask_api_key(config.get("api_key")),
                 base_url=config.get("base_url"),
-                enabled=config.get("enabled", False),
+                api_version=config.get("api_version"),
+                enabled=bool(config.get("enabled", False)),
             )
         )
-    return configs
+
+    return provider_configs
 
 
 @router.get("/providers/{provider_id}/config", response_model=ProviderConfig)
@@ -550,27 +478,20 @@ async def get_provider_config(provider_id: str) -> ProviderConfig:
     Returns:
         Provider configuration with masked API key
     """
-    if provider_id not in PROVIDER_CONFIGS:
+    try:
+        config = load_provider_config(provider_id)
+    except KeyError:
         raise HTTPException(
             status_code=404,
             detail=f"Provider '{provider_id}' not found",
-        )
-
-    config = PROVIDER_CONFIGS[provider_id]
-    api_key = config.get("api_key")
-
-    # Mask API key for security
-    masked_key = None
-    if api_key and len(api_key) > 12:
-        masked_key = f"{api_key[:8]}...{api_key[-4:]}"
-    elif api_key:
-        masked_key = "***"
+        ) from None
 
     return ProviderConfig(
         provider_id=provider_id,
-        api_key=masked_key,
+        api_key=_mask_api_key(config.get("api_key")),
         base_url=config.get("base_url"),
-        enabled=config.get("enabled", False),
+        api_version=config.get("api_version"),
+        enabled=bool(config.get("enabled", False)),
     )
 
 
@@ -589,36 +510,33 @@ async def update_provider_config(
     Returns:
         Updated provider configuration
     """
-    if provider_id not in PROVIDER_CONFIGS:
+    payload: Dict[str, Any] = {}
+    if config_update.api_key is not None:
+        payload["api_key"] = config_update.api_key
+    if config_update.base_url is not None:
+        payload["base_url"] = config_update.base_url
+    if config_update.api_version is not None:
+        payload["api_version"] = config_update.api_version
+    if config_update.enabled is not None:
+        payload["enabled"] = config_update.enabled
+
+    try:
+        if payload:
+            config = persist_provider_config(provider_id, payload)
+        else:
+            config = load_provider_config(provider_id)
+    except KeyError:
         raise HTTPException(
             status_code=404,
             detail=f"Provider '{provider_id}' not found",
-        )
-
-    # Update configuration
-    if config_update.api_key is not None:
-        PROVIDER_CONFIGS[provider_id]["api_key"] = config_update.api_key
-
-    if config_update.base_url is not None:
-        PROVIDER_CONFIGS[provider_id]["base_url"] = config_update.base_url
-
-    if config_update.enabled is not None:
-        PROVIDER_CONFIGS[provider_id]["enabled"] = config_update.enabled
-
-    # Return updated config with masked key
-    config = PROVIDER_CONFIGS[provider_id]
-    api_key = config.get("api_key")
-    masked_key = None
-    if api_key and len(api_key) > 12:
-        masked_key = f"{api_key[:8]}...{api_key[-4:]}"
-    elif api_key:
-        masked_key = "***"
+        ) from None
 
     return ProviderConfig(
         provider_id=provider_id,
-        api_key=masked_key,
+        api_key=_mask_api_key(config.get("api_key")),
         base_url=config.get("base_url"),
-        enabled=config.get("enabled", False),
+        api_version=config.get("api_version"),
+        enabled=bool(config.get("enabled", False)),
     )
 
 

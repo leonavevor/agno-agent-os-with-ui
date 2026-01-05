@@ -37,7 +37,13 @@ case "$1" in
     ;;
   app|server|api)
     echo "🚀 Starting AgentOS API server..."
-    exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --reload
+    # Use LOG_LEVEL env var to control verbosity (default: INFO)
+    # Set SUPPRESS_HEALTH_LOGS=false to see all health check logs
+    exec uvicorn app.main:app \
+      --host 0.0.0.0 \
+      --port ${PORT:-8000} \
+      --reload \
+      --log-config /app/app/uvicorn_log_config.json
     ;;
   worker)
     echo "⚙️  Starting background worker..."

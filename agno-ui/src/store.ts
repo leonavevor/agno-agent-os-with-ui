@@ -7,12 +7,16 @@ import {
   TeamDetails,
   type ChatMessage,
   type SkillMetadata,
+  type MCPServerMetadata,
+  type ToolMetadata,
+  type ExternalToolAccessSettings,
   type ModelProvider,
   type CurrentModelResponse,
   type ProviderConfig,
   type DefaultModelConfig,
   type EntityModelConfig,
-  type ModelConfiguration
+  type ModelConfiguration,
+  type AudioSettings
 } from '@/types/os'
 import { Project } from '@/components/ProjectModal'
 
@@ -78,6 +82,14 @@ interface Store {
   setIsMCPServersLoading: (isLoading: boolean) => void
   enabledMCPServers: Set<string>
   setEnabledMCPServers: (serverIds: Set<string>) => void
+  tools: ToolMetadata[]
+  setTools: (tools: ToolMetadata[]) => void
+  isToolsLoading: boolean
+  setIsToolsLoading: (isLoading: boolean) => void
+  enabledTools: Set<string>
+  setEnabledTools: (toolIds: Set<string>) => void
+  externalToolAccess: ExternalToolAccessSettings | null
+  setExternalToolAccess: (settings: ExternalToolAccessSettings | null) => void
   systemHealth: {
     status: 'healthy' | 'degraded' | 'down' | 'checking'
     backendConnected: boolean
@@ -108,6 +120,15 @@ interface Store {
   setEnabledSkills: (skillIds: Set<string>) => void
   theme: 'light' | 'dark-gray' | 'dark'
   setTheme: (theme: 'light' | 'dark-gray' | 'dark') => void
+  // Audio state
+  audioSettings: AudioSettings | null
+  setAudioSettings: (settings: AudioSettings | null) => void
+  isRecording: boolean
+  setIsRecording: (isRecording: boolean) => void
+  isPlayingAudio: boolean
+  setIsPlayingAudio: (isPlaying: boolean) => void
+  currentlyPlayingMessageId: string | null
+  setCurrentlyPlayingMessageId: (messageId: string | null) => void
 }
 
 export const useStore = create<Store>()(
@@ -180,6 +201,16 @@ export const useStore = create<Store>()(
       enabledMCPServers: new Set(),
       setEnabledMCPServers: (serverIds) =>
         set(() => ({ enabledMCPServers: serverIds })),
+      tools: [],
+      setTools: (tools) => set(() => ({ tools })),
+      isToolsLoading: false,
+      setIsToolsLoading: (isLoading) =>
+        set(() => ({ isToolsLoading: isLoading })),
+      enabledTools: new Set(),
+      setEnabledTools: (toolIds) => set(() => ({ enabledTools: toolIds })),
+      externalToolAccess: null,
+      setExternalToolAccess: (settings) =>
+        set(() => ({ externalToolAccess: settings })),
       systemHealth: {
         status: 'checking',
         backendConnected: false,
@@ -211,7 +242,17 @@ export const useStore = create<Store>()(
       enabledSkills: new Set(),
       setEnabledSkills: (skillIds) => set(() => ({ enabledSkills: skillIds })),
       theme: 'dark',
-      setTheme: (theme) => set(() => ({ theme }))
+      setTheme: (theme) => set(() => ({ theme })),
+      // Audio state
+      audioSettings: null,
+      setAudioSettings: (settings) => set(() => ({ audioSettings: settings })),
+      isRecording: false,
+      setIsRecording: (isRecording) => set(() => ({ isRecording })),
+      isPlayingAudio: false,
+      setIsPlayingAudio: (isPlaying) => set(() => ({ isPlayingAudio: isPlaying })),
+      currentlyPlayingMessageId: null,
+      setCurrentlyPlayingMessageId: (messageId) =>
+        set(() => ({ currentlyPlayingMessageId: messageId }))
     }),
     {
       name: 'endpoint-storage',

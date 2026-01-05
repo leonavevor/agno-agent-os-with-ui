@@ -31,15 +31,15 @@ export const APIRoutes = {
   DeleteMCPServer: (agentOSUrl: string, serverId: string) =>
     `${agentOSUrl}/mcp-servers/${serverId}`,
 
-  // Memory routes
-  InitializeSession: (agentOSUrl: string) => `${agentOSUrl}/memory/sessions`,
-  AddMessage: (agentOSUrl: string) => `${agentOSUrl}/memory/messages`,
-  GetChatHistory: (agentOSUrl: string, sessionId: string) =>
-    `${agentOSUrl}/memory/sessions/${sessionId}/history`,
-  UpdateLearnedFacts: (agentOSUrl: string, sessionId: string) =>
-    `${agentOSUrl}/memory/sessions/${sessionId}/facts`,
-  GetLearnedFacts: (agentOSUrl: string, sessionId: string) =>
-    `${agentOSUrl}/memory/sessions/${sessionId}/facts`,
+  // Tools routes
+  GetTools: (agentOSUrl: string) => `${agentOSUrl}/tools`,
+  GetTool: (agentOSUrl: string, toolId: string) => `${agentOSUrl}/tools/${toolId}`,
+  CreateTool: (agentOSUrl: string) => `${agentOSUrl}/tools`,
+  UpdateTool: (agentOSUrl: string, toolId: string) => `${agentOSUrl}/tools/${toolId}`,
+  DeleteTool: (agentOSUrl: string, toolId: string) => `${agentOSUrl}/tools/${toolId}`,
+  GetExternalToolSettings: (agentOSUrl: string) => `${agentOSUrl}/tools/settings/external-access`,
+  UpdateExternalToolSettings: (agentOSUrl: string) => `${agentOSUrl}/tools/settings/external-access`,
+  CheckToolExecution: (agentOSUrl: string, toolId: string) => `${agentOSUrl}/tools/${toolId}/can-execute`,
   ClearMemorySession: (agentOSUrl: string, sessionId: string) =>
     `${agentOSUrl}/memory/sessions/${sessionId}`,
   ListMemorySessions: (agentOSUrl: string) => `${agentOSUrl}/memory/sessions`,
@@ -66,5 +66,23 @@ export const APIRoutes = {
   SearchKnowledge: (agentOSUrl: string) => `${agentOSUrl}/knowledge/search`,
   UpdateKnowledgeMetadata: (agentOSUrl: string, contentId: string) =>
     `${agentOSUrl}/knowledge/${contentId}/metadata`,
-  KnowledgeHealthCheck: (agentOSUrl: string) => `${agentOSUrl}/knowledge/health`
+  KnowledgeHealthCheck: (agentOSUrl: string) => `${agentOSUrl}/knowledge/health`,
+
+  // Audio routes
+  GetAudioSettings: (agentOSUrl: string) => `${agentOSUrl}/os/audio/settings`,
+  UpdateAudioSettings: (agentOSUrl: string) => `${agentOSUrl}/os/audio/settings`,
+  TextToSpeech: (agentOSUrl: string) => `${agentOSUrl}/os/audio/tts`,
+  SpeechToText: (agentOSUrl: string) => `${agentOSUrl}/os/audio/stt`,
+  GetVoices: (agentOSUrl: string) => `${agentOSUrl}/os/audio/voices`,
+  GetAudioModels: (agentOSUrl: string) => `${agentOSUrl}/os/audio/models`
 }
+
+// Export audioRoutes for audio API client
+export const audioRoutes = {
+  settings: '/os/audio/settings',
+  tts: '/os/audio/tts',
+  stt: '/os/audio/stt',
+  voices: '/os/audio/voices',
+  models: '/os/audio/models'
+}
+

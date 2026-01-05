@@ -2,8 +2,12 @@
 import Sidebar from '@/components/chat/Sidebar/Sidebar'
 import { ChatArea } from '@/components/chat/ChatArea'
 import { Suspense } from 'react'
+import { useAudioSettings } from '@/hooks/useAudioSettings'
 
 export default function Home() {
+  // Load audio settings on mount
+  useAudioSettings()
+
   // Check if OS_SECURITY_KEY is defined on server-side
   const hasEnvToken = !!process.env.NEXT_PUBLIC_OS_SECURITY_KEY
   const envToken = process.env.NEXT_PUBLIC_OS_SECURITY_KEY || ''

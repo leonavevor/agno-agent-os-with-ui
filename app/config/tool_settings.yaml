@@ -1,0 +1,14 @@
+# Tool Settings Configuration
+# Controls access and execution of tools, especially external tools
+
+external_tool_access:
+  # Master switch for external tool execution
+  # External tools are those marked with is_external: true
+  enabled: false
+
+  # Whitelist of tool IDs that are allowed to execute
+  # If empty, all external tools can execute (when enabled)
+  whitelist: []
+
+  # Require user confirmation before executing external tools
+  require_confirmation: true

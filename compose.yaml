@@ -34,6 +34,7 @@ services:
       - .:/app
       - knowledge_storage:/app/knowledge_storage  # Persistent storage for uploaded files
       - mcp_servers_config:/app/config  # Persistent storage for MCP server configs
+      - tools_config:/app/config  # Persistent storage for tools configs
     environment:
       # Database
       DB_HOST: pgvector
@@ -41,6 +42,10 @@ services:
       DB_USER: ${DB_USER:-ai}
       DB_PASS: ${DB_PASSWORD:-ai}
       DB_DATABASE: ${DB_NAME:-ai}
+      
+      # Logging Configuration
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SUPPRESS_HEALTH_LOGS: ${SUPPRESS_HEALTH_LOGS:-true}
       
       # API Keys
       OPENAI_API_KEY: ${OPENAI_API_KEY}
@@ -141,3 +146,4 @@ volumes:
   pgdata:
   knowledge_storage:  # Persistent volume for uploaded knowledge files with folder structure
   mcp_servers_config:  # Persistent volume for MCP server configurations
+  tools_config:  # Persistent volume for tools configurations

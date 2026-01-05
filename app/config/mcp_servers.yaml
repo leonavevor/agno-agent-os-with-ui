@@ -1,74 +1,63 @@
-# MCP Server configurations
-# This file stores Model Context Protocol server configurations
-# that can be managed through the UI or API
-
 mcp_servers:
-  # Example: GitHub MCP Server
-  - id: github
-    name: GitHub
-    description: Access GitHub repositories, issues, and pull requests
-    command: npx
-    args:
-      - -y
-      - "@modelcontextprotocol/server-github"
-    env:
-      GITHUB_TOKEN: ${GITHUB_TOKEN}
-    transport: stdio
-    enabled: false
-    tags:
-      - github
-      - vcs
-      - development
-    version: 1.0.0
-
-  # Example: Filesystem MCP Server
-  - id: filesystem
-    name: Filesystem
-    description: Access and manipulate local files and directories
-    command: npx
-    args:
-      - -y
-      - "@modelcontextprotocol/server-filesystem"
-      - /app
-    env: {}
-    transport: stdio
-    enabled: false
-    tags:
-      - filesystem
-      - local
-    version: 1.0.0
-
-  # Example: Brave Search MCP Server
-  - id: brave-search
-    name: Brave Search
-    description: Search the web using Brave Search API
-    command: npx
-    args:
-      - -y
-      - "@modelcontextprotocol/server-brave-search"
-    env:
-      BRAVE_API_KEY: ${BRAVE_API_KEY}
-    transport: stdio
-    enabled: false
-    tags:
-      - search
-      - web
-    version: 1.0.0
-
-  # Example: Google Maps MCP Server
-  - id: google-maps
-    name: Google Maps
-    description: Access Google Maps data and services
-    command: npx
-    args:
-      - -y
-      - "@modelcontextprotocol/server-google-maps"
-    env:
-      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
-    transport: stdio
-    enabled: false
-    tags:
-      - maps
-      - location
-      - google
-    version: 1.0.0
+- id: github
+  name: GitHub
+  description: Access GitHub repositories, issues, and pull requests
+  command: npx
+  args:
+  - -y
+  - '@modelcontextprotocol/server-github'
+  env:
+    GITHUB_TOKEN: ${GITHUB_TOKEN}
+  transport: stdio
+  enabled: false
+  tags:
+  - github
+  - vcs
+  - development
+  version: 1.0.0
+- id: filesystem
+  name: Filesystem
+  description: Access and manipulate local files and directories
+  command: npx
+  args:
+  - -y
+  - '@modelcontextprotocol/server-filesystem'
+  - /app
+  env: {}
+  transport: stdio
+  enabled: false
+  tags:
+  - filesystem
+  - local
+  version: 1.0.0
+- id: brave-search
+  name: Brave Search
+  description: Search the web using Brave Search API
+  command: npx
+  args:
+  - -y
+  - '@modelcontextprotocol/server-brave-search'
+  env:
+    BRAVE_API_KEY: ${BRAVE_API_KEY}
+  transport: stdio
+  enabled: false
+  tags:
+  - search
+  - web
+  version: 1.0.0
+- id: google-maps
+  name: Google Maps
+  description: Access Google Maps data and services
+  command: npx
+  args:
+  - -y
+  - '@modelcontextprotocol/server-google-maps'
+  env:
+    GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+  transport: stdio
+  enabled: false
+  tags:
+  - maps
+  - location
+  - google
+  version: 1.0.0

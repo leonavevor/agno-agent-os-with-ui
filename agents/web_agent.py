@@ -1,9 +1,8 @@
 from textwrap import dedent
 
 from agno.agent import Agent
-from agno.models.openai import OpenAIChat
 
-from app.models import OPENAI_MODEL_ID
+from app.models_builder import build_chat_model
 from db.session import get_postgres_db
 from core import skill_orchestrator
 
@@ -12,7 +11,7 @@ _context = skill_orchestrator.build_for_agent("web-search-agent")
 web_agent = Agent(
     id="web-search-agent",
     name="Web Search Agent",
-    model=OpenAIChat(id=OPENAI_MODEL_ID),
+    model=build_chat_model(),
     # Tools available to the agent
     tools=_context.tools,
     # Description of the agent

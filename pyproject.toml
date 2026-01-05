@@ -19,6 +19,12 @@ dependencies = [
   "pytest-cov>=7.0.0,<8",
   "sqlalchemy",
   "wikipedia",
+  # Audio processing dependencies
+  "transformers>=4.47.0",
+  "torch>=2.5.0",
+  "soundfile>=0.13.0",
+  "pyttsx3>=2.90",  # Offline TTS fallback
+  "pydub>=0.25.0",  # Audio format conversion
 ]
 
 [project.optional-dependencies]

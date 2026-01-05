@@ -5,13 +5,18 @@ import { APIRoutes } from './routes'
 import {
   AgentDetails,
   CreateMCPServerPayload,
+  CreateToolPayload,
+  ExternalToolAccessSettings,
   MCPServerMetadata,
   MCPServerResponse,
   Sessions,
   SkillMetadata,
   SkillRouteResponse,
   TeamDetails,
-  UpdateMCPServerPayload
+  ToolMetadata,
+  ToolResponse,
+  UpdateMCPServerPayload,
+  UpdateToolPayload
 } from '@/types/os'
 
 // Helper function to create headers with optional auth token
@@ -439,3 +444,345 @@ export const deleteMCPServerAPI = async (
   }
 }
 
+// ============================================
+// Tools APIs
+// ============================================
+
+export const getToolsAPI = async (
+  endpoint: string,
+  includeDisabled: boolean = true,
+  authToken?: string
+): Promise<ToolMetadata[]> => {
+  const url = `${APIRoutes.GetTools(endpoint)}?include_disabled=${includeDisabled}`
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: createHeaders(authToken)
+    })
+
+    if (!response.ok) {
+      toast.error(`Failed to fetch tools: ${response.statusText}`)
+      return []
+    }
+
+    return (await response.json()) as ToolMetadata[]
+  } catch {
+    toast.error('Error fetching tools')
+    return []
+  }
+}
+
+export const getToolAPI = async (
+  endpoint: string,
+  toolId: string,
+  authToken?: string
+): Promise<ToolMetadata | null> => {
+  try {
+    const response = await fetch(APIRoutes.GetTool(endpoint, toolId), {
+      method: 'GET',
+      headers: createHeaders(authToken)
+    })
+
+    if (!response.ok) {
+      toast.error(`Failed to fetch tool: ${response.statusText}`)
+      return null
+    }
+
+    return (await response.json()) as ToolMetadata
+  } catch {
+    toast.error('Error fetching tool')
+    return null
+  }
+}
+
+export const createToolAPI = async (
+  endpoint: string,
+  payload: CreateToolPayload,
+  authToken?: string
+): Promise<ToolResponse | null> => {
+  try {
+    const response = await fetch(APIRoutes.CreateTool(endpoint), {
+      method: 'POST',
+      headers: createHeaders(authToken),
+      body: JSON.stringify(payload)
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const errorMessage = errorData.detail || response.statusText
+      toast.error(`Failed to create tool: ${errorMessage}`)
+      return null
+    }
+
+    const data = (await response.json()) as ToolResponse
+    toast.success(data.message || 'Tool created successfully')
+    return data
+  } catch (error) {
+    toast.error('Error creating tool')
+    return null
+  }
+}
+
+export const updateToolAPI = async (
+  endpoint: string,
+  toolId: string,
+  payload: UpdateToolPayload,
+  authToken?: string
+): Promise<ToolMetadata | null> => {
+  try {
+    const response = await fetch(APIRoutes.UpdateTool(endpoint, toolId), {
+      method: 'PATCH',
+      headers: createHeaders(authToken),
+      body: JSON.stringify(payload)
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const errorMessage = errorData.detail || response.statusText
+      toast.error(`Failed to update tool: ${errorMessage}`)
+      return null
+    }
+
+    const data = (await response.json()) as ToolMetadata
+    toast.success('Tool updated successfully')
+    return data
+  } catch (error) {
+    toast.error('Error updating tool')
+    return null
+  }
+}
+
+export const deleteToolAPI = async (
+  endpoint: string,
+  toolId: string,
+  authToken?: string
+): Promise<boolean> => {
+  try {
+    const response = await fetch(APIRoutes.DeleteTool(endpoint, toolId), {
+      method: 'DELETE',
+      headers: createHeaders(authToken)
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const errorMessage = errorData.detail || response.statusText
+      toast.error(`Failed to delete tool: ${errorMessage}`)
+      return false
+    }
+
+    toast.success('Tool deleted successfully')
+    return true
+  } catch (error) {
+    toast.error('Error deleting tool')
+    return false
+  }
+}
+
+export const getExternalToolSettingsAPI = async (
+  endpoint: string,
+  authToken?: string
+): Promise<ExternalToolAccessSettings | null> => {
+  try {
+    const response = await fetch(APIRoutes.GetExternalToolSettings(endpoint), {
+      method: 'GET',
+      headers: createHeaders(authToken)
+    })
+
+    if (!response.ok) {
+      toast.error(`Failed to fetch external tool settings: ${response.statusText}`)
+      return null
+    }
+
+    return (await response.json()) as ExternalToolAccessSettings
+  } catch {
+    toast.error('Error fetching external tool settings')
+    return null
+  }
+}
+
+export const updateExternalToolSettingsAPI = async (
+  endpoint: string,
+  settings: ExternalToolAccessSettings,
+  authToken?: string
+): Promise<ExternalToolAccessSettings | null> => {
+  try {
+    const response = await fetch(APIRoutes.UpdateExternalToolSettings(endpoint), {
+      method: 'PUT',
+      headers: createHeaders(authToken),
+      body: JSON.stringify(settings)
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const errorMessage = errorData.detail || response.statusText
+      toast.error(`Failed to update external tool settings: ${errorMessage}`)
+      return null
+    }
+
+    const data = (await response.json()) as ExternalToolAccessSettings
+    toast.success('External tool settings updated successfully')
+    return data
+  } catch (error) {
+    toast.error('Error updating external tool settings')
+    return null
+  }
+}
+
+// ==================== Audio API Functions ====================
+
+export const getAudioSettingsAPI = async (
+  endpoint: string,
+  authToken?: string
+): Promise<import('@/types/os').AudioSettings | null> => {
+  try {
+    const response = await fetch(APIRoutes.GetAudioSettings(endpoint), {
+      method: 'GET',
+      headers: createHeaders(authToken)
+    })
+
+    if (!response.ok) {
+      toast.error(`Failed to fetch audio settings: ${response.statusText}`)
+      return null
+    }
+
+    return await response.json()
+  } catch (error) {
+    toast.error('Error fetching audio settings')
+    return null
+  }
+}
+
+export const updateAudioSettingsAPI = async (
+  endpoint: string,
+  settings: import('@/types/os').AudioSettingsUpdate,
+  authToken?: string
+): Promise<import('@/types/os').AudioSettings | null> => {
+  try {
+    const response = await fetch(APIRoutes.UpdateAudioSettings(endpoint), {
+      method: 'PUT',
+      headers: createHeaders(authToken),
+      body: JSON.stringify(settings)
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const errorMessage = errorData.detail || response.statusText
+      toast.error(`Failed to update audio settings: ${errorMessage}`)
+      return null
+    }
+
+    const data = await response.json()
+    toast.success('Audio settings updated successfully')
+    return data
+  } catch (error) {
+    toast.error('Error updating audio settings')
+    return null
+  }
+}
+
+export const textToSpeechAPI = async (
+  endpoint: string,
+  text: string,
+  voice?: string,
+  authToken?: string
+): Promise<Blob | null> => {
+  try {
+    const body: import('@/types/os').TTSRequest = { text }
+    if (voice) body.voice = voice
+
+    const response = await fetch(APIRoutes.TextToSpeech(endpoint), {
+      method: 'POST',
+      headers: createHeaders(authToken),
+      body: JSON.stringify(body)
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const errorMessage = errorData.detail || response.statusText
+      toast.error(`Failed to convert text to speech: ${errorMessage}`)
+      return null
+    }
+
+    return await response.blob()
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    toast.error(`Error converting text to speech: ${errorMessage}`)
+    return null
+  }
+}
+
+export const speechToTextAPI = async (
+  endpoint: string,
+  audioFile: File,
+  authToken?: string
+): Promise<import('@/types/os').STTResponse | null> => {
+  try {
+    const formData = new FormData()
+    formData.append('audio', audioFile) // Changed from 'audio_file' to match backend
+
+    const response = await fetch(APIRoutes.SpeechToText(endpoint), {
+      method: 'POST',
+      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+      body: formData
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const errorMessage = errorData.detail || response.statusText
+      toast.error(`Failed to convert speech to text: ${errorMessage}`)
+      return null
+    }
+
+    return await response.json()
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    toast.error(`Error converting speech to text: ${errorMessage}`)
+    return null
+  }
+}
+
+export const getVoicesAPI = async (
+  endpoint: string,
+  authToken?: string
+): Promise<import('@/types/os').Voice[]> => {
+  try {
+    const response = await fetch(APIRoutes.GetVoices(endpoint), {
+      method: 'GET',
+      headers: createHeaders(authToken)
+    })
+
+    if (!response.ok) {
+      toast.error(`Failed to fetch voices: ${response.statusText}`)
+      return []
+    }
+
+    const data = await response.json()
+    return data.voices || []
+  } catch (error) {
+    toast.error('Error fetching voices')
+    return []
+  }
+}
+
+export const getAudioModelsAPI = async (
+  endpoint: string,
+  authToken?: string
+): Promise<import('@/types/os').AudioModel[]> => {
+  try {
+    const response = await fetch(APIRoutes.GetAudioModels(endpoint), {
+      method: 'GET',
+      headers: createHeaders(authToken)
+    })
+
+    if (!response.ok) {
+      toast.error(`Failed to fetch audio models: ${response.statusText}`)
+      return []
+    }
+
+    const data = await response.json()
+    return data.models || []
+  } catch (error) {
+    toast.error('Error fetching audio models')
+    return []
+  }
+}

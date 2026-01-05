@@ -1,0 +1,107 @@
+tools:
+- id: calculator
+  name: Calculator
+  description: Perform mathematical calculations
+  language: python
+  code: "def calculate(expression: str) -> float:\n    \"\"\"Safely evaluate a mathematical\
+    \ expression.\"\"\"\n    try:\n        # Use eval with restricted globals for\
+    \ safety\n        return eval(expression, {\"__builtins__\": {}}, {})\n    except\
+    \ Exception as e:\n        return f\"Error: {str(e)}\"\n"
+  params:
+    expression:
+      type: string
+      description: Mathematical expression to evaluate
+      required: true
+  tags:
+  - math
+  - utility
+  enabled: true
+  is_external: false
+  version: 1.0.0
+- id: list_files
+  name: List Files
+  description: List files in a directory
+  language: bash
+  code: '#!/bin/bash
+
+    # List files in the specified directory
+
+    ls -lah "$1"
+
+    '
+  params:
+    directory:
+      type: string
+      description: Directory path to list
+      required: true
+  tags:
+  - filesystem
+  - utility
+  enabled: true
+  is_external: false
+  version: 1.0.0
+- id: json_formatter
+  name: JSON Formatter
+  description: Format and validate JSON data
+  language: javascript
+  code: "function formatJson(jsonString) {\n  try {\n    const parsed = JSON.parse(jsonString);\n\
+    \    return JSON.stringify(parsed, null, 2);\n  } catch (error) {\n    return\
+    \ `Error: ${error.message}`;\n  }\n}\nmodule.exports = { formatJson };\n"
+  params:
+    jsonString:
+      type: string
+      description: JSON string to format
+      required: true
+  tags:
+  - json
+  - utility
+  - formatting
+  enabled: true
+  is_external: false
+  version: 1.0.0
+- id: web_scraper
+  name: Web Scraper
+  description: Scrape data from websites (requires external access)
+  language: python
+  code: "import requests\nfrom bs4 import BeautifulSoup\n\ndef scrape_url(url: str)\
+    \ -> dict:\n    \"\"\"Scrape content from a URL.\"\"\"\n    try:\n        response\
+    \ = requests.get(url, timeout=10)\n        response.raise_for_status()\n     \
+    \   soup = BeautifulSoup(response.content, 'html.parser')\n        return {\n\
+    \            \"title\": soup.title.string if soup.title else \"No title\",\n \
+    \           \"text\": soup.get_text()[:500],\n            \"links\": len(soup.find_all('a'))\n\
+    \        }\n    except Exception as e:\n        return {\"error\": str(e)}\n"
+  params:
+    url:
+      type: string
+      description: URL to scrape
+      required: true
+  tags:
+  - web
+  - scraping
+  - external
+  enabled: false
+  is_external: true
+  version: 1.0.0
+- id: csv_parser
+  name: CSV Parser
+  description: Parse and analyze CSV data
+  language: python
+  code: "import csv\nfrom io import StringIO\n\ndef parse_csv(csv_string: str) ->\
+    \ dict:\n    \"\"\"Parse CSV data and return statistics.\"\"\"\n    try:\n   \
+    \     reader = csv.DictReader(StringIO(csv_string))\n        rows = list(reader)\n\
+    \        return {\n            \"row_count\": len(rows),\n            \"columns\"\
+    : list(rows[0].keys()) if rows else [],\n            \"first_row\": rows[0] if\
+    \ rows else {}\n        }\n    except Exception as e:\n        return {\"error\"\
+    : str(e)}\n"
+  params:
+    csv_string:
+      type: string
+      description: CSV data to parse
+      required: true
+  tags:
+  - data
+  - csv
+  - parsing
+  enabled: false
+  is_external: false
+  version: 1.0.0

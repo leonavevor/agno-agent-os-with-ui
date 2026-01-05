@@ -1,0 +1,41 @@
+
+add litellm proxy to support multiple llm backends and update the ui for such support
+make each module listed for litellm have its own base url and own token (also adjust the frontend for that this change - group it as one settings modal popup for clearer view)
+make it support litellm backend configs list from yaml but only default to the hardcoded if not supplied (or use shallow merge to merge the two lists so that user can override or add to the default list)
+also enable capability to adjust other settings of backend models by expanding. enable default backend model if none are specified but enabled per agent to model configuration. add support for project, teams, agents etc in similar hierechy. also ensure end to end support this.
+
+add posibility to add skills from the frontend and equally reflecting in the backend and storage
+
+
+add possibility to add mcp servers from the frontend and equally reflecting in the backend and storage (also vice versa), mounting it from volume, etc... and ensure end to end support
+
+
+add possibility to set default embedding model too (locally using huggingface or remote via litellm proxy - from other llm api providers such as openai, cohere, azure, huggingface, etc)
+
+add support for text to speach and vice versa speech to text using haggingface models such as kokoro and Moonshine
+
+refactor parts of thee  code that depends on OPENAI_API_KEY to rather utilize the litellm and it multiple llm backends 
+
+add possibilty to display llm system messages in the ui (end 2 end)
+
+add an autonomous agent feature that is capable of creating other specialized agents that can perform tasks autonomously to achieve user-defined goals. it should be strictly enabled only via the backend configuration file for security and control purposes.
+This feature should include the ability to set up, monitor, and manage these agents through the frontend interface, with backend support for task execution and progress tracking.
+- restrict it from doing certain actions that may compromise security or integrity of the system or delibrately cause harm to others. And work within the defined boundaries and policies set in the original system prompt it started with and nothing else.
+- it should have access to all the tools available in the system
+- it should be able to create specialized agents with specific roles and capabilities
+- it should be able to manage multiple tasks and sub-agents simultaneously
+- it should provide real-time updates on task progress and outcomes
+- it should have the capability to learn from previous tasks and improve its performance over time.
+- it should have be able to create, update, delete specialized agents as needed to achieve the goals set by the user.
+- it should be able to write it its own tools if needed to achieve the set goals. Also has has access to the cookbook for possible reference to make it task completion faster.
+
+
+
+
+
+
+
+
+proceed, identify and improve according to  the grounding and goals
+
+ensure the feature works end to end with the frontend, backend and storage

@@ -6,9 +6,9 @@ import re
 from typing import Any, Dict, List, Optional
 
 from agno.agent import Agent
-from agno.models.openai import OpenAIChat
 from pydantic import BaseModel, Field
 
+from app.models_builder import build_chat_model
 from .metrics_collector import ValidationMetrics, ValidationStatus
 
 
@@ -48,7 +48,7 @@ class HallucinationDetector:
         """Create a default fact-checking agent."""
         return Agent(
             name="Fact Checker",
-            model=OpenAIChat(id="gpt-4o-mini"),
+            model=build_chat_model(model_id="gpt-4o-mini"),
             instructions=[
                 "You are a rigorous fact-checker and hallucination detector.",
                 "Your job is to analyze AI-generated responses for factual accuracy.",

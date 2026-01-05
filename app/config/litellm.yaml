@@ -1,0 +1,117 @@
+# LiteLLM configuration overrides.
+# This file is merged with the defaults defined in litellm_manager.py.
+# Provide only the entries you need to customize.
+
+providers:
+  openai:
+    api_key: ${OPENAI_API_KEY}
+    base_url: https://api.openai.com/v1
+    enabled: true
+  anthropic:
+    api_key: ${ANTHROPIC_API_KEY}
+    base_url: https://api.anthropic.com
+    enabled: false
+  azure:
+    api_key: ${AZURE_API_KEY}
+    base_url: ${AZURE_API_BASE}
+    api_version: ${AZURE_API_VERSION}
+    enabled: false
+  ollama:
+    base_url: http://localhost:11434
+    enabled: true
+  huggingface:
+    enabled: true
+    local: true
+
+model_catalog:
+  openai:
+    - id: gpt-5-mini
+      name: GPT-5 Mini
+      provider: openai
+      description: Fast and efficient model for most tasks
+      context_window: 128000
+      supports_streaming: true
+      supports_tools: true
+      supports_vision: true
+    - id: gpt-4o-mini
+      name: GPT-4o Mini
+      provider: openai
+      description: Versatile lower-cost model
+      context_window: 128000
+      supports_streaming: true
+      supports_tools: true
+      supports_vision: true
+  anthropic:
+    - id: claude-3-sonnet-20240229
+      name: Claude 3 Sonnet
+      provider: anthropic
+      description: Balanced performance and speed
+      context_window: 200000
+      supports_streaming: true
+      supports_tools: true
+      supports_vision: true
+  azure:
+    - id: azure/gpt-4o
+      name: Azure GPT-4o
+      provider: azure
+      description: GPT-4o served from Azure OpenAI
+      context_window: 128000
+      supports_streaming: true
+      supports_tools: true
+      supports_vision: true
+  ollama:
+    - id: ollama/llama3.2
+      name: Llama 3.2 (Local)
+      provider: ollama
+      description: Run locally via Ollama
+      context_window: 128000
+      supports_streaming: true
+      supports_tools: true
+      supports_vision: false
+
+embedding_catalog:
+  openai:
+    - id: text-embedding-3-small
+      name: Text Embedding 3 Small
+      provider: openai
+      dimensions: 1536
+      description: Most capable embedding model
+    - id: text-embedding-3-large
+      name: Text Embedding 3 Large
+      provider: openai
+      dimensions: 3072
+      description: Larger, more capable embedding model
+  huggingface:
+    - id: sentence-transformers/all-MiniLM-L6-v2
+      name: MiniLM L6 v2
+      provider: huggingface
+      dimensions: 384
+      description: Fast and efficient local embeddings
+    - id: sentence-transformers/all-mpnet-base-v2
+      name: MPNet Base v2
+      provider: huggingface
+      dimensions: 768
+      description: High quality local embeddings
+    - id: BAAI/bge-small-en-v1.5
+      name: BGE Small EN
+      provider: huggingface
+      dimensions: 384
+      description: Fast, high-quality local embeddings
+    - id: BAAI/bge-base-en-v1.5
+      name: BGE Base EN
+      provider: huggingface
+      dimensions: 768
+      description: Balanced performance and quality
+
+defaults:
+  chat:
+    provider: openai
+    model_id: gpt-5-mini
+    settings:
+      temperature: 0.7
+      max_tokens: 4096
+      stream: true
+  embedding:
+    provider: openai
+    model_id: text-embedding-3-small
+    dimensions: 1536

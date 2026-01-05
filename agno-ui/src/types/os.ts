@@ -85,6 +85,54 @@ export interface MCPServerResponse {
   message: string
 }
 
+export interface ToolMetadata {
+  id: string
+  name: string
+  description: string
+  language: string
+  code: string
+  params?: Record<string, any>
+  tags: string[]
+  enabled: boolean
+  is_external: boolean
+  version?: string | null
+}
+
+export interface CreateToolPayload {
+  name: string
+  description: string
+  language: string
+  code: string
+  params?: Record<string, any>
+  tags?: string[]
+  is_external?: boolean
+  version?: string
+}
+
+export interface UpdateToolPayload {
+  name?: string
+  description?: string
+  language?: string
+  code?: string
+  params?: Record<string, any>
+  enabled?: boolean
+  is_external?: boolean
+  tags?: string[]
+  version?: string
+}
+
+export interface ToolResponse {
+  status: string
+  tool: ToolMetadata
+  message: string
+}
+
+export interface ExternalToolAccessSettings {
+  enabled: boolean
+  whitelist: string[]
+  require_confirmation: boolean
+}
+
 export interface ModelInfo {
   id: string
   name: string
@@ -430,3 +478,51 @@ export interface ChatEntry {
     created_at: number
   }
 }
+
+// Audio types
+export interface AudioSettings {
+  tts_enabled: boolean
+  tts_model: string
+  tts_voice: string
+  stt_enabled: boolean
+  stt_model: string
+  stt_language: string
+  auto_play_responses: boolean
+  audio_sample_rate: number
+}
+
+export interface AudioSettingsUpdate {
+  tts_enabled?: boolean
+  tts_model?: string
+  tts_voice?: string
+  stt_enabled?: boolean
+  stt_model?: string
+  stt_language?: string
+  auto_play_responses?: boolean
+  audio_sample_rate?: number
+}
+
+export interface TTSRequest {
+  text: string
+  voice?: string
+}
+
+export interface STTResponse {
+  text: string
+  language: string
+}
+
+export interface Voice {
+  id: string
+  name: string
+  gender: string
+  description: string
+}
+
+export interface AudioModel {
+  id: string
+  name: string
+  type: 'tts' | 'stt'
+  description: string
+}
+

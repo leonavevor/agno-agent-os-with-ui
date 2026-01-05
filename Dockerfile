@@ -18,7 +18,7 @@ ARG APP_DIR=/app
 RUN groupadd -g ${GID} ${USER} \
     && useradd -g ${GID} -u ${UID} -ms /bin/bash -d ${APP_DIR} ${USER} \
     && apt-get update \
-    && apt-get install -y --no-install-recommends postgresql-client \
+    && apt-get install -y --no-install-recommends postgresql-client ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # Development stage for dependencies

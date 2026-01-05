@@ -1,0 +1,8 @@
+audio_sample_rate: 8000
+auto_play_responses: false
+stt_enabled: true
+stt_language: en
+stt_model: usefulsensors/moonshine-tiny
+tts_enabled: true
+tts_model: hexgrad/Kokoro-82M
+tts_voice: bf_emma
