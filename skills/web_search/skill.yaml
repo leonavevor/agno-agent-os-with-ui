@@ -1,6 +1,6 @@
 id: web_search
 name: Web Search Skill
-description: Focused web intelligence gathering using DuckDuckGo queries.
+description: Focused web intelligence gathering using the configured search provider.
 tags:
   - search
   - web

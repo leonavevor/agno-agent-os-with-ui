@@ -213,6 +213,46 @@ The `/agents` folder contains pre-built agents, teams, and workflows that you ca
 - Agno Assist: An Agent that can help answer questions about Agno and provide support for developers working with Agno.
 - Web Search Agent: A Agent that can search the web based on the user's query.
 
+### Optional Parallel web search and page fetching
+
+The web-search skill uses DuckDuckGo by default. To select
+[Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp), set
+`WEB_SEARCH_PROVIDER=parallel` in `.env` (or export it for a local backend).
+Parallel provides free anonymous web search in Fast mode and page excerpts, with
+no Parallel account or API key required. Free access has rate limits; an optional
+`PARALLEL_API_KEY` enables authenticated access with higher limits.
+
+Parallel uses the existing external-tool permissions. To allow unattended search
+and fetching, explicitly configure `app/config/tool_settings.yaml`:
+
+```yaml
+external_tool_access:
+  enabled: true
+  whitelist: [parallel_web_search, parallel_web_fetch]
+  require_confirmation: false
+```
+
+Merge the whitelist with any tools you already allow. Keep
+`require_confirmation: true` when using a client that supports Agno's paused-run
+confirmation and continuation flow; a call then pauses before making requests.
+The bundled chat UI does not provide that confirmation flow, so unattended use
+requires the explicit setting above. Restart the backend after changing the
+provider or confirmation policy. With Docker Compose, rebuild and recreate it:
+
+```sh
+docker compose up -d --build --force-recreate agno-backend-api
+```
+
+The existing `web_search` skill stays selected in `core/skills_config.yaml`.
+The agent receives `parallel_web_search` and `parallel_web_fetch` through the
+normal skill loader, rather than through the MCP catalog UI. Search returns
+source URLs for citations; fetch accepts 1–20 HTTP(S) URLs and returns excerpts.
+Requests have a 30-second total deadline, and cancellation closes the MCP
+connection. Errors are returned to the agent without switching providers.
+Set `WEB_SEARCH_PROVIDER=duckduckgo` to restore DuckDuckGo or `none` to expose no
+web-search tools. Existing skill selections remain unchanged; external-access
+and whitelist restrictions are rechecked for every Parallel call.
+
 The `/teams` folder contains pre-built teams that you can use as a starting point.
 
 - Multilingual Team: A team consisting of member agents that specialize in different languages and can translate and provide cultural insights.
